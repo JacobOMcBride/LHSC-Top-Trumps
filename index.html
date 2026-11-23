@@ -181,6 +181,7 @@ details.hist li .o { flex: none; font-family: var(--f-ui); font-weight: 700; let
 
 @media (prefers-reduced-motion: reduce) { .slot.flipin, .dots::after { animation: none; } }
 
+[hidden] { display: none !important; }
 textarea.codebox { width: 100%; min-height: 120px; resize: vertical; padding: 10px 12px; background: #0F1914; border: 1.5px solid var(--felt-line); color: var(--chalk); border-radius: 4px; font-family: var(--f-type); font-size: 13px; line-height: 1.35; word-break: break-all; }
 textarea.codebox:focus-visible { outline: 2px solid var(--brass); outline-offset: 1px; }
 .steps { display: grid; gap: 22px; max-width: 640px; margin: 28px auto 0; }
@@ -188,6 +189,40 @@ textarea.codebox:focus-visible { outline: 2px solid var(--brass); outline-offset
 .step h3 { margin: 0; font-family: var(--f-ui); font-weight: 700; font-size: 22px; letter-spacing: .04em; text-transform: uppercase; }
 .step h3 span { color: var(--brass); margin-right: 8px; }
 .pre { margin: 22px auto 0; }
+.segs2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.seg { appearance: none; cursor: pointer; text-align: left; display: grid; gap: 3px; align-content: start; padding: 10px 12px; border-radius: 4px; background: transparent; color: var(--chalk); border: 1.5px solid var(--felt-line); font-family: var(--f-body); min-width: 0; }
+.seg b { font-family: var(--f-ui); font-weight: 800; font-size: 18px; letter-spacing: .06em; text-transform: uppercase; }
+.seg span { font-size: 13px; line-height: 1.25; color: var(--chalk-dim); }
+.seg.on { border-color: var(--brass); background: rgba(217,182,90,.12); }
+.seg.on b { color: var(--brass); }
+.seg:focus-visible, .tile:focus-visible, .chatbtn:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+.viewall { margin-top: 18px; }
+.galtitle { margin: 22px 0 4px; font-family: var(--f-ui); font-weight: 800; font-size: 34px; text-transform: uppercase; letter-spacing: .02em; }
+.gal { display: grid; margin-top: 16px; padding-bottom: 30px; }
+.tile { appearance: none; border: 0; padding: 0; background: none; cursor: pointer; border-radius: 6px; box-shadow: 0 6px 16px rgba(0,0,0,.4); }
+.lightbox { position: fixed; inset: 0; z-index: 20; background: rgba(10,16,12,.92); display: grid; place-items: center; padding: 16px; overflow: auto; }
+.lbin { display: grid; gap: 14px; justify-items: center; }
+.lbnav { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center; }
+.chatbtn { position: fixed; right: max(16px, env(safe-area-inset-right, 0px)); bottom: max(16px, env(safe-area-inset-bottom, 0px)); z-index: 15; appearance: none; cursor: pointer; display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 20px; border-radius: 24px; border: 0; background: var(--brass); color: var(--ink); font-family: var(--f-ui); font-weight: 800; font-size: 18px; letter-spacing: .06em; text-transform: uppercase; box-shadow: 0 6px 18px rgba(0,0,0,.45); }
+.chatbtn .badge { background: var(--brick); color: var(--chalk); min-width: 22px; height: 22px; border-radius: 11px; display: inline-grid; place-items: center; font-size: 14px; padding: 0 6px; }
+.chatbtn.ping { animation: ping 1.4s ease-in-out infinite; }
+@keyframes ping { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.07); } }
+.chatpanel { position: fixed; z-index: 16; right: max(12px, env(safe-area-inset-right, 0px)); bottom: max(12px, env(safe-area-inset-bottom, 0px)); width: min(360px, calc(100vw - 24px)); height: min(460px, 70vh); display: grid; grid-template-rows: auto minmax(0, 1fr) auto; background: var(--felt-deep); border: 1.5px solid var(--felt-line); border-radius: 8px; box-shadow: 0 14px 40px rgba(0,0,0,.6); overflow: hidden; }
+.chathead { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px 10px 14px; border-bottom: 1px solid var(--felt-line); font-family: var(--f-ui); font-weight: 800; font-size: 18px; letter-spacing: .06em; text-transform: uppercase; }
+.chatx { appearance: none; border: 0; background: transparent; color: var(--chalk); font-size: 28px; line-height: 1; cursor: pointer; width: 40px; height: 40px; border-radius: 4px; }
+.chatx:hover { background: rgba(255,255,255,.08); }
+.chatlog { overflow-y: auto; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; overscroll-behavior: contain; }
+.msg { display: grid; gap: 1px; max-width: 86%; min-width: 0; }
+.msg .who { font-family: var(--f-ui); font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--chalk-dim); }
+.msg .txt { padding: 7px 11px; border-radius: 10px; background: #2A3B31; color: var(--chalk); font-size: 16px; line-height: 1.35; overflow-wrap: anywhere; white-space: pre-wrap; }
+.msg.me { align-self: flex-end; justify-items: end; }
+.msg.me .txt { background: var(--brass); color: var(--ink); }
+.chatempty { margin: auto; color: var(--chalk-dim); font-size: 15px; }
+.chatform { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; padding: 10px; border-top: 1px solid var(--felt-line); }
+.chatform input { min-width: 0; padding: 0 12px; min-height: 40px; background: #0F1914; border: 1.5px solid var(--felt-line); border-radius: 4px; color: var(--chalk); font-family: var(--f-body); font-size: 16px; }
+.chatform input:focus-visible { outline: 2px solid var(--brass); outline-offset: 1px; }
+@media (max-width: 520px) { .chatpanel { left: 0; right: 0; bottom: 0; width: auto; height: min(70vh, 520px); border-radius: 12px 12px 0 0; padding-bottom: env(safe-area-inset-bottom, 0px); } }
+@media (prefers-reduced-motion: reduce) { .chatbtn.ping { animation: none; } }
 .qr { width: min(260px, 70vw); height: auto; aspect-ratio: 1; border-radius: 6px; image-rendering: pixelated; }
 .bigcode { font-family: var(--f-ui); font-weight: 800; font-size: clamp(64px, 18vw, 112px); letter-spacing: .14em; padding-left: .14em; color: var(--brass); line-height: 1; margin: 6px 0 10px; user-select: all; }
 .joinrow { display: grid; grid-template-columns: 1fr auto; gap: 10px; }
@@ -2549,6 +2584,7 @@ function newDeal(base) {
   s.status = 'playing';
   s.hands = { A: ids.slice(0, half), B: ids.slice(half, half * 2) };
   s.pot = [];
+  s.mode = s.mode === 'alternate' ? 'alternate' : 'winner';
   s.chooser = randInt(2) ? 'A' : 'B';
   s.phase = 'choose';
   s.round = 1;
@@ -2582,6 +2618,7 @@ function applyCollect(g) {
     s.pot = [];
     s.chooser = p.res;
   }
+  if (s.mode === 'alternate') s.chooser = other(g.chooser);
   s.log = [...s.log, { r: s.round, s: p.stat, a: p.a, b: p.b, res: p.res }].slice(-8);
   s.round += 1;
   s.pick = null;
@@ -2609,7 +2646,7 @@ function applyResign(g, who) {
 /* ---------- state (browser-to-browser link, matched by a short game code) ---------- */
 const Peer = (window.peerjs && window.peerjs.Peer) || undefined;
 let G = null, side = null, peer = null, dc = null;
-const ui = { sel: null, busy: false, err: '', confirmResign: false, shownKey: '', name: sget('lhsc.tt.name') || '', toast: '', net: null, code: '' };
+const ui = { sel: null, busy: false, err: '', confirmResign: false, shownKey: '', name: sget('lhsc.tt.name') || '', toast: '', net: null, code: '', mode: (sget('lhsc.tt.mode') === 'alternate' ? 'alternate' : 'winner'), solo: false, view: null, zoom: null };
 const app = document.getElementById('app');
 
 function say(msg) { ui.err = msg; }
@@ -2694,9 +2731,10 @@ function wireChannel(conn) {
     lastRx = Date.now();
     if (!m || typeof m !== 'object' || m.t === 'ping') return;
     if (m.t === 'bye') { if (dc === conn) lost(); return; }
+    if (m.t === 'chat') { chatReceive(m.text); return; }
     if (m.t === 'hello' && side === 'A' && G) { sendState(); }
     else if (m.t === 'hello' && ui.net && ui.net.role === 'host' && !G) {
-      const base = { v: 1, players: { A: { id: 'A', name: cleanName(ui.name) }, B: { id: 'B', name: cleanName(m.name) } }, status: 'waiting', series: { A: 0, B: 0 }, games: 0 };
+      const base = { v: 1, players: { A: { id: 'A', name: cleanName(ui.name) }, B: { id: 'B', name: cleanName(m.name) } }, status: 'waiting', series: { A: 0, B: 0 }, games: 0, mode: ui.mode };
       side = 'A'; ui.net = null;
       write(newDeal(base));
     } else if (m.t === 'state' && m.s && m.s.hands && m.s.players) {
@@ -2712,10 +2750,10 @@ function wireChannel(conn) {
 }
 addEventListener('pagehide', () => { try { if (dc && dc.open) dc.send({ t: 'bye' }); } catch (e) {} });
 function sendState() { if (dc && dc.open) { try { dc.send({ t: 'state', s: G }); } catch (e) {} } }
-function write(state) { G = state; sendState(); render(); }
+function write(state) { G = state; sendState(); render(); aiTick(); }
 
 function toLobby(msg) {
-  closePeer();
+  closePeer(); clearTimeout(aiTimer); ui.solo = false; chatReset();
   G = null; side = null; ui.net = null; ui.sel = null; ui.confirmResign = false; ui.shownKey = ''; ui.busy = false; ui.code = '';
   say(msg || '');
   render();
@@ -2800,6 +2838,93 @@ async function copyFrom(id, msg) {
   const m = /join=([A-Za-z0-9]{4})/.exec(location.hash || '');
   if (m) { ui.code = cleanCode(m[1]); setTimeout(guestJoin, 0); }
 })();
+
+/* ---------- play the computer ---------- */
+let aiTimer = 0;
+function startSolo() {
+  ui.name = cleanName(ui.name); sset('lhsc.tt.name', ui.name);
+  closePeer(); clearTimeout(aiTimer); chatReset();
+  ui.solo = true; ui.net = null; ui.view = null; say('');
+  side = 'A';
+  write(newDeal({ v: 1, players: { A: { id: 'A', name: ui.name }, B: { id: 'B', name: 'Computer' } }, status: 'waiting', series: { A: 0, B: 0 }, games: 0, mode: ui.mode }));
+}
+/* the computer rates each stat on its top card by the share of all 24 cards it would beat */
+function aiChoose(card) {
+  const score = card.v.map((v, i) => {
+    let w = 0; CARDS.forEach(c => { if (c.v[i] < v) w += 1; else if (c.v[i] === v) w += 0.5; });
+    return w / CARDS.length + (Math.random() * 0.08);
+  });
+  return score.indexOf(Math.max(...score));
+}
+function aiTick() {
+  clearTimeout(aiTimer);
+  if (!ui.solo || !G || G.status !== 'playing') return;
+  const key = G.games + ':' + G.round + ':' + G.phase;
+  const still = () => ui.solo && G && G.status === 'playing' && key === G.games + ':' + G.round + ':' + G.phase;
+  if (G.phase === 'choose' && G.chooser === 'B') {
+    aiTimer = setTimeout(() => { if (still()) write(applyPick(G, aiChoose(CARDS[G.hands.B[0]]))); }, 1100 + randInt(900));
+  } else if (G.phase === 'reveal') {
+    const resolver = G.pick.res === 'draw' ? G.chooser : G.pick.res;
+    if (resolver === 'B') aiTimer = setTimeout(() => { if (still()) write(applyCollect(G)); }, 1800);
+  }
+}
+function setMode(m) { ui.mode = m === 'alternate' ? 'alternate' : 'winner'; sset('lhsc.tt.mode', ui.mode); render(); }
+
+/* ---------- chat (two-player games only; lives outside the table so typing is never interrupted) ---------- */
+const chat = { open: false, msgs: [], unread: 0, built: false };
+function chatBuild() {
+  if (chat.built) return; chat.built = true;
+  const btn = h('button', { id: 'chatbtn', class: 'chatbtn', type: 'button', 'aria-expanded': 'false', 'aria-controls': 'chatpanel', onclick: () => chatToggle(true) }, h('span', { text: 'Chat' }), h('b', { id: 'chatbadge', class: 'badge', hidden: true, text: '0' }));
+  const input = h('input', { id: 'chatin', type: 'text', maxlength: '500', placeholder: 'Say something', autocomplete: 'off', 'aria-label': 'Message' });
+  const form = h('form', { class: 'chatform', onsubmit: e => { e.preventDefault(); chatSend(); } }, input, h('button', { class: 'btn small', type: 'submit', text: 'Send' }));
+  const panel = h('div', { id: 'chatpanel', class: 'chatpanel', hidden: true, role: 'dialog', 'aria-label': 'Chat' },
+    h('div', { class: 'chathead' }, h('span', { id: 'chatwho', text: 'Chat' }), h('button', { class: 'chatx', type: 'button', 'aria-label': 'Close chat', onclick: () => chatToggle(false), text: '×' })),
+    h('div', { id: 'chatlog', class: 'chatlog', role: 'log', 'aria-live': 'polite' }), form);
+  document.body.append(btn, panel);
+  addEventListener('keydown', e => { if (e.key === 'Escape' && chat.open) chatToggle(false); });
+}
+function chatToggle(open) {
+  chat.open = open; if (open) chat.unread = 0;
+  chatSync();
+  if (open) { const i = document.getElementById('chatin'); if (i) i.focus(); const l = document.getElementById('chatlog'); if (l) l.scrollTop = l.scrollHeight; }
+}
+function chatLine(m) {
+  return h('div', { class: 'msg ' + (m.me ? 'me' : 'them') }, h('span', { class: 'who', text: m.me ? 'You' : m.name }), h('span', { class: 'txt', text: m.text }));
+}
+function chatAdd(m) {
+  chat.msgs.push(m);
+  const l = document.getElementById('chatlog');
+  if (l) { const atEnd = l.scrollTop + l.clientHeight >= l.scrollHeight - 40; l.append(chatLine(m)); if (atEnd || m.me) l.scrollTop = l.scrollHeight; }
+  if (!m.me && !chat.open) chat.unread += 1;
+  chatSync();
+}
+function chatSend() {
+  const i = document.getElementById('chatin'); if (!i) return;
+  const text = i.value.trim().slice(0, 500);
+  if (!text || !dc || !dc.open) return;
+  try { dc.send({ t: 'chat', text }); } catch (e) { return; }
+  i.value = ''; chatAdd({ me: true, name: ui.name, text });
+}
+function chatReceive(text) {
+  const who = G && side ? G.players[other(side)].name : 'Opponent';
+  chatAdd({ me: false, name: who, text: String(text == null ? '' : text).slice(0, 500) });
+}
+function chatReset() { chat.msgs = []; chat.unread = 0; chat.open = false; const l = document.getElementById('chatlog'); if (l) l.replaceChildren(); chatSync(); }
+function chatSync() {
+  const on = !!(G && !ui.solo && dc && side);
+  if (!on && !chat.built) return;
+  chatBuild();
+  const btn = document.getElementById('chatbtn'), panel = document.getElementById('chatpanel'), badge = document.getElementById('chatbadge');
+  btn.hidden = !on || chat.open; panel.hidden = !on || !chat.open;
+  btn.setAttribute('aria-expanded', chat.open ? 'true' : 'false');
+  badge.hidden = !chat.unread; badge.textContent = String(chat.unread);
+  btn.classList.toggle('ping', chat.unread > 0);
+  const who = document.getElementById('chatwho'); if (who && G && side) who.textContent = 'Chat with ' + G.players[other(side)].name;
+  const l = document.getElementById('chatlog');
+  if (l && !l.childElementCount && chat.msgs.length) chat.msgs.forEach(m => l.append(chatLine(m)));
+  if (l && !chat.msgs.length && !l.childElementCount) l.append(h('p', { class: 'chatempty', text: 'No messages yet. Say hello.' }));
+  if (l && chat.msgs.length) l.querySelectorAll('.chatempty').forEach(x => x.remove());
+}
 /* ---------- card drawing ---------- */
 function cardEl(c, o = {}) {
   const long = c.q.length > 34;
@@ -2828,6 +2953,7 @@ function topbar(extra) {
     h('div', { class: 'meta' }, extra));
 }
 
+function modeChip() { return h('span', { class: 'chip series', text: G && G.mode === 'alternate' ? 'Taking turns' : 'Winner picks' }); }
 function metrics(reveal) {
   const avail = app.clientWidth || 360;
   const wide = avail >= 640;
@@ -2917,7 +3043,7 @@ function table() {
     ? h('div', { class: 'foot' }, h('span', { class: 'note', text: 'Give the game to ' + opName + '?' }), h('button', { class: 'btn small danger', type: 'button', onclick: resign, text: 'Yes, resign' }), h('button', { class: 'btn small ghost', type: 'button', onclick: () => { ui.confirmResign = false; render(); }, text: 'Keep playing' }))
     : h('div', { class: 'foot' }, h('button', { class: 'btn small ghost', type: 'button', onclick: () => { ui.confirmResign = true; render(); }, text: 'Resign' }));
   return h('div', null,
-    topbar([series, h('span', { class: 'chip', text: 'Connected' })]),
+    topbar([series, modeChip(), h('span', { class: 'chip', text: ui.solo ? 'Vs computer' : 'Connected' })]),
     banner(s, meName, opName),
     pileStrip(s, meName, opName),
     h('div', { class: 'duel' }, seats),
@@ -2935,7 +3061,7 @@ function over() {
   const sub = tie ? 'Both hands ran out together.' : (s.reason === 'resigned' ? (won ? opName + ' resigned.' : 'You resigned.') : (won ? 'You took every card.' : opName + ' took every card.'));
   const series = (s.series.A || s.series.B) ? h('span', { class: 'chip series', text: 'Series ' + s.series[me] + '–' + s.series[op] }) : null;
   const host = side === 'A';
-  return h('div', null, topbar([series, h('span', { class: 'chip', text: 'Connected' })]),
+  return h('div', null, topbar([series, modeChip(), h('span', { class: 'chip', text: ui.solo ? 'Vs computer' : 'Connected' })]),
     h('div', { class: 'over' },
       h('div', { class: 'kick', text: 'Game over after ' + (s.round - 1) + ' rounds' }),
       h('div', { class: 'final ' + (tie ? '' : (won ? 'win' : 'lose')), text: headline }),
@@ -2946,6 +3072,14 @@ function over() {
       history(s, opName)));
 }
 
+
+function modePick() {
+  const opt = (v, title, sub) => h('button', { class: 'seg' + (ui.mode === v ? ' on' : ''), type: 'button', role: 'radio', 'aria-checked': ui.mode === v ? 'true' : 'false', onclick: () => setMode(v) }, h('b', { text: title }), h('span', { text: sub }));
+  return h('div', { class: 'field' }, h('span', { class: 'lab', id: 'modelab', text: 'Who picks the stat?' }),
+    h('div', { class: 'segs2', role: 'radiogroup', 'aria-labelledby': 'modelab' },
+      opt('winner', 'Winner picks', 'Win a round and you choose next'),
+      opt('alternate', 'Take turns', 'The pick swaps every round')));
+}
 
 function lobby() {
   const nameIn = h('input', { type: 'text', id: 'pname', maxlength: '16', placeholder: 'Your name', value: ui.name, autocomplete: 'nickname', oninput: e => { ui.name = e.target.value; } });
@@ -2958,17 +3092,41 @@ function lobby() {
       h('div', { class: 'hero' },
         h('h1', null, 'Bisley', h('em', { text: 'Top Trumps' })),
         h('p', { class: 'lead', text: 'Twenty-four cards, twelve each. Pick your best stat and take them all.' }),
-        h('div', { class: 'fan', 'aria-hidden': 'true' }, fanCards)),
+        h('div', { class: 'fan', 'aria-hidden': 'true' }, fanCards),
+        h('button', { class: 'btn ghost small viewall', type: 'button', onclick: () => { ui.view = 'cards'; ui.zoom = null; render(); scrollTo(0, 0); }, text: 'View all 24 cards' })),
       h('div', { class: 'panel' },
         h('div', { class: 'field' }, h('label', { for: 'pname', text: 'Your name' }), nameIn),
-        h('button', { class: 'btn', type: 'button', onclick: () => hostStart(0), text: 'Host a game' }),
-        h('div', { class: 'or', text: 'or join with a code' }),
+        modePick(),
+        h('button', { class: 'btn', type: 'button', onclick: () => startSolo(), text: 'Play the computer' }),
+        h('button', { class: 'btn ghost', type: 'button', onclick: () => hostStart(0), text: 'Host a game for a friend' }),
+        h('div', { class: 'or', text: 'or join a friend with a code' }),
         h('div', { class: 'joinrow' }, codeIn, h('button', { class: 'btn ghost', type: 'button', onclick: guestJoin, text: 'Join' })),
-        h('p', { class: 'err', role: 'status', 'aria-live': 'polite', text: ui.err }),
-        h('ul', { class: 'rules' },
-          h('li', null, h('b', null, 'Host. '), 'You get a 4-character code. Send it to your friend.'),
-          h('li', null, h('b', null, 'Join. '), 'Your friend opens this same file and types the code.'),
-          h('li', null, h('b', null, 'Stay on this page. '), 'Reloading drops the game.')))));
+        h('p', { class: 'note', text: 'When you join, the host’s pick rule applies.' }),
+        h('p', { class: 'err', role: 'status', 'aria-live': 'polite', text: ui.err }))));
+}
+
+function cardsScreen() {
+  const avail = app.clientWidth || 360;
+  const cols = avail >= 900 ? 5 : avail >= 680 ? 4 : avail >= 500 ? 3 : 2;
+  const gap = 12, s = Math.min(1.1, (avail - gap * (cols - 1)) / cols / 238);
+  const tiles = CARDS.map((c, i) => h('button', { class: 'tile', type: 'button', 'aria-label': 'Open ' + c.n, onclick: () => { ui.zoom = i; render(); } }, slot(cardEl(c), s)));
+  let box = null;
+  if (ui.zoom !== null) {
+    const i = ui.zoom, c = CARDS[i];
+    const zs = Math.max(0.7, Math.min(1.5, (innerWidth - 40) / 238, (innerHeight - 150) / 333));
+    const go = d => { ui.zoom = (i + d + CARDS.length) % CARDS.length; render(); };
+    box = h('div', { class: 'lightbox', role: 'dialog', 'aria-label': c.n, onclick: e => { if (e.target === e.currentTarget) { ui.zoom = null; render(); } } },
+      h('div', { class: 'lbin' }, slot(cardEl(c), zs),
+        h('div', { class: 'lbnav' },
+          h('button', { class: 'btn small ghost', type: 'button', onclick: () => go(-1), text: 'Previous' }),
+          h('span', { class: 'chip series', text: (i + 1) + ' / ' + CARDS.length }),
+          h('button', { class: 'btn small ghost', type: 'button', onclick: () => go(1), text: 'Next' }),
+          h('button', { class: 'btn small', type: 'button', onclick: () => { ui.zoom = null; render(); }, text: 'Close' }))));
+  }
+  return h('div', null, topbar(h('button', { class: 'btn small ghost', type: 'button', onclick: () => { ui.view = null; ui.zoom = null; render(); }, text: 'Back' })),
+    h('h2', { class: 'galtitle', text: 'All 24 cards' }),
+    h('p', { class: 'note', text: 'Tap a card to see it full size.' }),
+    h('div', { class: 'gal', style: 'grid-template-columns:repeat(' + cols + ', max-content); gap:' + gap + 'px; justify-content:center' }, tiles), box);
 }
 
 function signal() {
@@ -2998,18 +3156,21 @@ function render() {
   const active = document.activeElement;
   const keep = active && active.id ? { id: active.id, s: active.selectionStart, e: active.selectionEnd } : null;
   let view;
-  if (G && G.status === 'over') view = over();
+  if (ui.view === 'cards' && !G && !ui.net) view = cardsScreen();
+  else if (G && G.status === 'over') view = over();
   else if (G) view = table();
   else if (ui.net) view = signal();
   else view = lobby();
   app.replaceChildren(view);
   document.querySelectorAll('body > .toast').forEach(el => el.remove());
   if (ui.toast) document.body.append(h('div', { class: 'toast', role: 'status', text: ui.toast }));
+  chatSync();
   if (keep) { const el = document.getElementById(keep.id); if (el) { el.focus(); try { el.setSelectionRange(keep.s, keep.e); } catch (e) {} } }
 }
 
 let rz = 0;
-addEventListener('resize', () => { cancelAnimationFrame(rz); rz = requestAnimationFrame(() => { if (G && G.status === 'playing') render(); }); });
+addEventListener('keydown', e => { if (ui.view === 'cards' && ui.zoom !== null && !G) { if (e.key === 'Escape') { ui.zoom = null; render(); } else if (e.key === 'ArrowRight') { ui.zoom = (ui.zoom + 1) % CARDS.length; render(); } else if (e.key === 'ArrowLeft') { ui.zoom = (ui.zoom + CARDS.length - 1) % CARDS.length; render(); } } });
+addEventListener('resize', () => { cancelAnimationFrame(rz); rz = requestAnimationFrame(() => { if ((G && G.status === 'playing') || ui.view === 'cards') render(); }); });
 render();
 
 </script>
