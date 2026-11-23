@@ -2649,7 +2649,9 @@ const Peer = (window.peerjs && window.peerjs.Peer) || undefined;
 let G = null, side = null, peer = null, dc = null;
 let specs = [];            /* spectators connected to this host */
 const MAX_SPECS = 8;
-const ui = { sel: null, busy: false, err: '', confirmResign: false, shownKey: '', name: sget('lhsc.tt.name') || '', toast: '', net: null, code: '', mode: (sget('lhsc.tt.mode') === 'alternate' ? 'alternate' : 'winner'), solo: false, view: null, zoom: null, watch: false, hostCode: '' };
+const isHost = () => !!ui.hostCode && !ui.watch && !ui.solo;
+const watchCount = () => (isHost() ? specs.length : (ui.specN || 0));
+const ui = { sel: null, busy: false, err: '', confirmResign: false, shownKey: '', name: sget('lhsc.tt.name') || '', toast: '', net: null, code: '', mode: (sget('lhsc.tt.mode') === 'alternate' ? 'alternate' : 'winner'), solo: false, view: null, zoom: null, watch: false, hostCode: '', specN: 0 };
 const app = document.getElementById('app');
 
 function say(msg) { ui.err = msg; }
@@ -2735,7 +2737,7 @@ function wireChannel(conn) {
     lastRx = Date.now();
     if (!m || typeof m !== 'object' || m.t === 'ping') return;
     if (m.t === 'bye') { if (dc === conn) lost(); return; }
-    if (m.t === 'chat') { chatReceive(m.text); return; }
+    if (m.t === 'chat') { chatFromPlayerLink(m); return; }
     if (m.t === 'hello' && side === 'A' && G) { sendState(); }
     else if (m.t === 'hello' && ui.net && ui.net.role === 'host' && !G) {
       const base = { v: 1, players: { A: { id: 'A', name: cleanName(ui.name) }, B: { id: 'B', name: cleanName(m.name) } }, status: 'waiting', series: { A: 0, B: 0 }, games: 0, mode: ui.mode };
@@ -2743,6 +2745,7 @@ function wireChannel(conn) {
       write(newDeal(base));
     } else if (m.t === 'state' && m.s && m.s.hands && m.s.players) {
       if (G && G.status === 'over' && m.s.status !== 'over' && (m.s.games || 0) <= (G.games || 0)) return;
+      if (typeof m.w === 'number') ui.specN = m.w;
       G = m.s; side = ui.net && ui.net.role === 'guest' || side === 'B' ? 'B' : 'A';
       if (ui.net) ui.net = null;
       sendSpecs();
@@ -2755,10 +2758,11 @@ function wireChannel(conn) {
 }
 addEventListener('pagehide', () => { try { if (dc && dc.open) dc.send({ t: 'bye' }); specs.forEach(c => { if (c.open) c.send({ t: 'bye' }); }); } catch (e) {} });
 function sendState() {
-  if (dc && dc.open) { try { dc.send({ t: 'state', s: G }); } catch (e) {} }
+  if (dc && dc.open) { try { dc.send({ t: 'state', s: G, w: specs.length }); } catch (e) {} }
   sendSpecs();
 }
-function sendSpecs() { specs.forEach(c => { if (c.open) { try { c.send({ t: 'state', s: G }); } catch (e) {} } }); }
+function sendSpecs() { specs.forEach(c => { if (c.open) { try { c.send({ t: 'state', s: G, w: specs.length }); } catch (e) {} } }); }
+function announceSpecs() { if (G) sendState(); render(); }
 function write(state) { G = state; sendState(); render(); aiTick(); }
 
 function toLobby(msg) {
@@ -2905,17 +2909,25 @@ function watchIce(conn, dead) {
 function addSpec(conn) {
   if (specs.length >= MAX_SPECS) { conn.on('open', () => { try { conn.send({ t: 'full' }); } catch (e) {} setTimeout(() => conn.close(), 300); }); return; }
   let added = false;
-  const drop = () => { const i = specs.indexOf(conn); if (i >= 0) { specs.splice(i, 1); render(); } };
+  const drop = () => { const i = specs.indexOf(conn); if (i >= 0) { specs.splice(i, 1); announceSpecs(); } };
   const join = () => {
     if (added) return; added = true; specs.push(conn);
-    try { conn.send(G ? { t: 'state', s: G } : { t: 'wait' }); } catch (e) {}
-    render();
+    try { conn.send(G ? { t: 'state', s: G, w: specs.length } : { t: 'wait' }); } catch (e) {}
+    const hist = chat.msgs.slice(-40).map(x => ({ from: x.me ? ui.name || 'Host' : x.name, spec: !!x.spec, text: x.text }));
+    if (hist.length) { try { conn.send({ t: 'chathist', msgs: hist }); } catch (e) {} }
+    announceSpecs();
   };
   conn.on('open', join);
   conn.on('data', m => {
     if (!m || typeof m !== 'object') return;
     if (m.t === 'ping') { try { conn.send({ t: 'ping' }); } catch (e) {} }
-    else if (m.t === 'hello') { try { conn.send(G ? { t: 'state', s: G } : { t: 'wait' }); } catch (e) {} }
+    else if (m.t === 'hello') { if (m.name) conn.specName = String(m.name).replace(/\s+/g, ' ').trim().slice(0, 16); try { conn.send(G ? { t: 'state', s: G, w: specs.length } : { t: 'wait' }); } catch (e) {} }
+    else if (m.t === 'chat') {
+      const text = String(m.text == null ? '' : m.text).slice(0, 500); if (!text.trim()) return;
+      const from = conn.specName || 'Spectator';
+      chatAdd({ me: false, name: from, spec: true, text });
+      chatFanout({ t: 'chat', text, from, spec: true }, conn);
+    }
   });
   conn.on('close', drop); conn.on('error', drop);
   watchIce(conn, () => { try { conn.close(); } catch (e) {} drop(); });
@@ -2929,7 +2941,7 @@ function wireWatcher(conn) {
     if (opened) return; opened = true;
     clearTimeout(joinTimer); startBeat(conn);
     if (ui.net) ui.net.stage = 'linked';
-    const hi = () => { try { if (!G && dc === conn && conn.open) { conn.send({ t: 'hello' }); setTimeout(hi, 3000); } } catch (e) {} };
+    const hi = () => { try { if (!G && dc === conn && conn.open) { conn.send({ t: 'hello', name: ui.name ? cleanName(ui.name) : 'Spectator' }); setTimeout(hi, 3000); } } catch (e) {} };
     hi();
     render();
   };
@@ -2940,7 +2952,9 @@ function wireWatcher(conn) {
     if (m.t === 'wait') { if (ui.net) { ui.net.hostReady = true; render(); } return; }
     if (m.t === 'bye') { toLobby('The host left, so the game ended.'); return; }
     if (m.t === 'full') { toLobby('That game already has the maximum number of spectators.'); return; }
-    if (m.t === 'state' && m.s && m.s.hands && m.s.players) { G = m.s; side = 'A'; ui.net = null; render(); }
+    if (m.t === 'chat') { chatAdd({ me: false, name: String(m.from || 'Someone').slice(0, 16), spec: !!m.spec, text: String(m.text == null ? '' : m.text).slice(0, 500) }); return; }
+    if (m.t === 'chathist' && Array.isArray(m.msgs)) { m.msgs.slice(-40).forEach(x => chatAdd({ me: false, name: String(x.from || '').slice(0, 16), spec: !!x.spec, text: String(x.text || '').slice(0, 500) }, true)); return; }
+    if (m.t === 'state' && m.s && m.s.hands && m.s.players) { if (typeof m.w === 'number') ui.specN = m.w; G = m.s; side = 'A'; ui.net = null; render(); }
   });
   conn.on('close', () => { if (dc === conn) toLobby('The host left, so the game ended.'); });
   conn.on('error', () => { if (dc === conn) lost(); });
@@ -2952,6 +2966,22 @@ function copyWatch() {
   const done = ok => toast(ok ? 'Watch link copied' : 'Spectators choose Watch and type ' + ui.hostCode);
   if (!hosted) { done(false); return; }
   try { navigator.clipboard.writeText(link).then(() => done(true), () => done(false)); } catch (e) { done(false); }
+}
+
+/* ---------- chat routing: the host relays between the opponent and spectators ---------- */
+function chatFanout(msg, except) {
+  if (dc && dc.open && dc !== except) { try { dc.send(msg); } catch (e) {} }
+  specs.forEach(c => { if (c !== except && c.open) { try { c.send(msg); } catch (e) {} } });
+}
+function chatFromPlayerLink(m) {
+  const text = String(m.text == null ? '' : m.text).slice(0, 500);
+  if (isHost()) {                                   /* the opponent spoke; pass it on to spectators */
+    const from = G && G.players ? G.players.B.name : 'Opponent';
+    chatAdd({ me: false, name: from, spec: false, text });
+    chatFanout({ t: 'chat', text, from, spec: false }, dc);
+  } else {                                          /* host-relayed: has the sender's name */
+    chatAdd({ me: false, name: String(m.from || (G && side ? G.players[other(side)].name : 'Opponent')).slice(0, 16), spec: !!m.spec, text });
+  }
 }
 
 /* ---------- chat (two-player games only; lives outside the table so typing is never interrupted) ---------- */
@@ -2973,29 +3003,29 @@ function chatToggle(open) {
   if (open) { const i = document.getElementById('chatin'); if (i) i.focus(); const l = document.getElementById('chatlog'); if (l) l.scrollTop = l.scrollHeight; }
 }
 function chatLine(m) {
-  return h('div', { class: 'msg ' + (m.me ? 'me' : 'them') }, h('span', { class: 'who', text: m.me ? 'You' : m.name }), h('span', { class: 'txt', text: m.text }));
+  return h('div', { class: 'msg ' + (m.me ? 'me' : 'them') }, h('span', { class: 'who', text: m.me ? 'You' : m.name + (m.spec ? ' · watching' : '') }), h('span', { class: 'txt', text: m.text }));
 }
-function chatAdd(m) {
-  chat.msgs.push(m);
+function chatAdd(m, quiet) {
+  chat.msgs.push(m); if (chat.msgs.length > 200) chat.msgs.shift();
   const l = document.getElementById('chatlog');
   if (l) { const atEnd = l.scrollTop + l.clientHeight >= l.scrollHeight - 40; l.append(chatLine(m)); if (atEnd || m.me) l.scrollTop = l.scrollHeight; }
-  if (!m.me && !chat.open) chat.unread += 1;
+  if (!m.me && !chat.open && !quiet) chat.unread += 1;
   chatSync();
 }
 function chatSend() {
   const i = document.getElementById('chatin'); if (!i) return;
   const text = i.value.trim().slice(0, 500);
   if (!text || !dc || !dc.open) return;
-  try { dc.send({ t: 'chat', text }); } catch (e) { return; }
-  i.value = ''; chatAdd({ me: true, name: ui.name, text });
-}
-function chatReceive(text) {
-  const who = G && side ? G.players[other(side)].name : 'Opponent';
-  chatAdd({ me: false, name: who, text: String(text == null ? '' : text).slice(0, 500) });
+  const me = ui.name ? cleanName(ui.name) : (ui.watch ? 'Spectator' : 'Player');
+  try {
+    if (isHost()) chatFanout({ t: 'chat', text, from: me, spec: false }, null);
+    else dc.send({ t: 'chat', text });             /* opponent or spectator: the host adds the name and relays */
+  } catch (e) { return; }
+  i.value = ''; chatAdd({ me: true, name: me, text });
 }
 function chatReset() { chat.msgs = []; chat.unread = 0; chat.open = false; const l = document.getElementById('chatlog'); if (l) l.replaceChildren(); chatSync(); }
 function chatSync() {
-  const on = !!(G && !ui.solo && !ui.watch && dc && side);
+  const on = !!(G && !ui.solo && dc && side);
   if (!on && !chat.built) return;
   chatBuild();
   const btn = document.getElementById('chatbtn'), panel = document.getElementById('chatpanel'), badge = document.getElementById('chatbadge');
@@ -3003,7 +3033,7 @@ function chatSync() {
   btn.setAttribute('aria-expanded', chat.open ? 'true' : 'false');
   badge.hidden = !chat.unread; badge.textContent = String(chat.unread);
   btn.classList.toggle('ping', chat.unread > 0);
-  const who = document.getElementById('chatwho'); if (who && G && side) who.textContent = 'Chat with ' + G.players[other(side)].name;
+  const who = document.getElementById('chatwho'); if (who && G && side) { const n = watchCount(); who.textContent = (ui.watch ? 'Game chat' : 'Chat with ' + G.players[other(side)].name) + (n && !ui.watch ? ' · ' + n + ' watching' : ''); }
   const l = document.getElementById('chatlog');
   if (l && !l.childElementCount && chat.msgs.length) chat.msgs.forEach(m => l.append(chatLine(m)));
   if (l && !chat.msgs.length && !l.childElementCount) l.append(h('p', { class: 'chatempty', text: 'No messages yet. Say hello.' }));
@@ -3037,7 +3067,7 @@ function topbar(extra) {
     h('div', { class: 'meta' }, extra));
 }
 
-function specChip() { return specs.length ? h('span', { class: 'chip series', text: specs.length + (specs.length === 1 ? ' watching' : ' watching') }) : null; }
+function specChip() { const n = watchCount(); return n ? h('span', { class: 'chip series', text: n + ' watching' }) : null; }
 function watchBtn() { return side === 'A' && ui.hostCode && !ui.solo ? h('button', { class: 'btn small ghost', type: 'button', onclick: copyWatch, text: 'Invite a spectator' }) : null; }
 function modeChip() { return h('span', { class: 'chip series', text: G && G.mode === 'alternate' ? 'Taking turns' : 'Winner picks' }); }
 function metrics(reveal) {
@@ -3246,7 +3276,7 @@ function specBanner(s) {
   const A = s.players.A.name, B = s.players.B.name;
   if (s.phase === 'choose') {
     const who = s.players[s.chooser].name;
-    return h('div', { class: 'banner' }, h('div', { class: 'kick', text: 'Round ' + s.round }), h('div', { class: 'big' }, who + ' is choosing', h('span', { class: 'dots' })), h('div', { class: 'note', text: 'Cards stay hidden until the pick is made.' }));
+    return h('div', { class: 'banner' }, h('div', { class: 'kick', text: 'Round ' + s.round }), h('div', { class: 'big' }, who + ' is choosing', h('span', { class: 'dots' })), h('div', { class: 'note', text: 'You can see both cards. The players only see their own.' }));
   }
   const p = s.pick;
   const ca = p.res === 'draw' ? '' : (p.res === 'A' ? 'win' : 'lose'), cb = p.res === 'draw' ? '' : (p.res === 'B' ? 'win' : 'lose');
@@ -3263,11 +3293,11 @@ function specTable() {
   const avail = app.clientWidth || 360, sc = Math.min(1.4, (avail - 16) / 2 / 238);
   const key = s.games + ':' + s.round + ':' + s.phase; const fresh = key !== ui.shownKey; ui.shownKey = key;
   const cls = k => reveal && p.res !== 'draw' ? (p.res === k ? 'win' : 'lose') : '';
-  const seat = (k, name) => h('div', { class: 'seat' }, h('div', { class: 'tag', text: name }),
-    reveal ? slot(cardEl(CARDS[s.hands[k][0]], { hi: p.stat }), sc, cls(k) + (fresh ? ' flipin' : '')) : slot(backEl(), sc));
+  const seat = (k, name) => h('div', { class: 'seat' }, h('div', { class: 'tag', text: name + (!reveal && s.chooser === k ? ' · picking' : '') }),
+    slot(cardEl(CARDS[s.hands[k][0]], reveal ? { hi: p.stat } : {}), sc, cls(k) + (reveal && fresh ? ' flipin' : '')));
   const series = (s.series.A || s.series.B) ? h('span', { class: 'chip series', text: 'Series ' + s.series.A + '–' + s.series.B }) : null;
   return h('div', null,
-    topbar([series, modeChip(), h('span', { class: 'chip', text: 'Watching' })]),
+    topbar([series, modeChip(), specChip(), h('span', { class: 'chip', text: 'Watching' })]),
     specBanner(s), pileStrip(s, A, B),
     h('div', { class: 'duel' }, seat('A', A), seat('B', B)),
     h('div', { class: 'foot' }, h('button', { class: 'btn small ghost', type: 'button', onclick: () => toLobby(''), text: 'Stop watching' })));
@@ -3277,7 +3307,7 @@ function specOver() {
   const tie = s.winner === 'draw';
   const wn = tie ? '' : s.players[s.winner].name, ln = tie ? '' : s.players[other(s.winner)].name;
   const series = (s.series.A || s.series.B) ? h('span', { class: 'chip series', text: 'Series ' + s.series.A + '–' + s.series.B }) : null;
-  return h('div', null, topbar([series, modeChip(), h('span', { class: 'chip', text: 'Watching' })]),
+  return h('div', null, topbar([series, modeChip(), specChip(), h('span', { class: 'chip', text: 'Watching' })]),
     h('div', { class: 'over' },
       h('div', { class: 'kick', text: 'Game over after ' + (s.round - 1) + ' rounds' }),
       h('div', { class: 'final ' + (tie ? '' : 'win'), text: tie ? 'Dead heat' : wn + ' wins' }),
