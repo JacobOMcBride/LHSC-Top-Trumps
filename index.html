@@ -2783,7 +2783,9 @@ function hostStart(tries) {
   ui.net = { role: 'host', stage: 'making', code }; ui.hostCode = code; say(''); render();
   const p = new Peer(PREFIX + code, peerOpts());
   peer = p;
-  p.on('open', () => { if (peer !== p || !ui.net) return; ui.net.stage = 'invite'; render(); });
+  clearTimeout(joinTimer);
+  joinTimer = setTimeout(() => { if (peer === p && ui.net && ui.net.stage === 'making') toLobby('Could not reach the matchmaking service. Check your internet connection (some work or school networks block it) and try again.'); }, 25000);
+  p.on('open', () => { if (peer !== p || !ui.net) return; clearTimeout(joinTimer); ui.net.stage = 'invite'; render(); });
   p.on('connection', conn => {
     if (peer !== p) return;
     if (conn.metadata && conn.metadata.role === 'watch') { addSpec(conn); return; }
@@ -2808,9 +2810,12 @@ function guestJoin(asWatcher) {
   ui.net = { role: asWatcher ? 'watch' : 'guest', stage: 'making', code }; ui.watch = asWatcher; say(''); render();
   const p = new Peer(peerOpts());
   peer = p;
+  clearTimeout(joinTimer);
+  joinTimer = setTimeout(() => { if (peer === p && !G && ui.net && ui.net.stage === 'making') toLobby('Could not reach the matchmaking service. Check your internet connection (some work or school networks block it) and try again.'); }, 25000);
   const fail = msg => { if (peer === p && !G && ui.net && ui.net.stage !== 'linked') toLobby(msg); };
   p.on('open', () => {
     if (peer !== p) return;
+    clearTimeout(joinTimer);
     const conn = p.connect(PREFIX + code, { reliable: true, serialization: 'json', metadata: asWatcher ? { role: 'watch' } : undefined });
     if (asWatcher) wireWatcher(conn); else wireChannel(conn);
     joinTimer = setTimeout(() => fail('Could not reach that game. Check the code, and make sure your friend is still on the waiting screen.'), 20000);
@@ -2903,14 +2908,14 @@ function addSpec(conn) {
   const drop = () => { const i = specs.indexOf(conn); if (i >= 0) { specs.splice(i, 1); render(); } };
   const join = () => {
     if (added) return; added = true; specs.push(conn);
-    if (G) { try { conn.send({ t: 'state', s: G }); } catch (e) {} }
+    try { conn.send(G ? { t: 'state', s: G } : { t: 'wait' }); } catch (e) {}
     render();
   };
   conn.on('open', join);
   conn.on('data', m => {
     if (!m || typeof m !== 'object') return;
     if (m.t === 'ping') { try { conn.send({ t: 'ping' }); } catch (e) {} }
-    else if (m.t === 'hello' && G) { try { conn.send({ t: 'state', s: G }); } catch (e) {} }
+    else if (m.t === 'hello') { try { conn.send(G ? { t: 'state', s: G } : { t: 'wait' }); } catch (e) {} }
   });
   conn.on('close', drop); conn.on('error', drop);
   watchIce(conn, () => { try { conn.close(); } catch (e) {} drop(); });
@@ -2924,13 +2929,15 @@ function wireWatcher(conn) {
     if (opened) return; opened = true;
     clearTimeout(joinTimer); startBeat(conn);
     if (ui.net) ui.net.stage = 'linked';
-    try { conn.send({ t: 'hello' }); } catch (e) {}
+    const hi = () => { try { if (!G && dc === conn && conn.open) { conn.send({ t: 'hello' }); setTimeout(hi, 3000); } } catch (e) {} };
+    hi();
     render();
   };
   conn.on('open', onOpen);
   conn.on('data', m => {
     lastRx = Date.now();
     if (!m || typeof m !== 'object' || m.t === 'ping') return;
+    if (m.t === 'wait') { if (ui.net) { ui.net.hostReady = true; render(); } return; }
     if (m.t === 'bye') { toLobby('The host left, so the game ended.'); return; }
     if (m.t === 'full') { toLobby('That game already has the maximum number of spectators.'); return; }
     if (m.t === 'state' && m.s && m.s.hands && m.s.players) { G = m.s; side = 'A'; ui.net = null; render(); }
@@ -3227,7 +3234,8 @@ function signal() {
     else body = h('div', { class: 'waiting' }, h('h2', null, 'Connecting', h('span', { class: 'dots' })), h('p', { class: 'note', text: 'Keep this page open. The cards are dealt as soon as the link is up.' }), cancel);
   } else {
     const w = n.role === 'watch';
-    body = h('div', { class: 'waiting' }, h('h2', null, n.stage === 'linked' ? (w ? 'Watching' : 'Linked') : (w ? 'Finding game ' : 'Joining game ') + (n.stage === 'linked' ? '' : n.code), h('span', { class: 'dots' })), h('p', { class: 'note', text: n.stage === 'linked' ? (w ? 'Waiting for the game to start.' : 'Waiting for the host to deal.') : 'Looking for your friend’s game.' }), cancel);
+    if (w && n.stage === 'linked') body = h('div', { class: 'waiting' }, h('h2', null, 'Connected to the host'), h('p', { class: 'note', text: 'There is no game in progress yet. The host is waiting for an opponent. The game will appear here as soon as it starts.' }), h('p', { class: 'note' }, 'Waiting', h('span', { class: 'dots' })), cancel);
+    else body = h('div', { class: 'waiting' }, h('h2', null, (w ? 'Finding game ' : n.stage === 'linked' ? 'Linked' : 'Joining game ') + (n.stage === 'linked' && !w ? '' : (n.stage === 'linked' ? '' : n.code)), h('span', { class: 'dots' })), h('p', { class: 'note', text: n.stage === 'linked' ? 'Waiting for the host to deal.' : 'Looking for your friend’s game. This can take up to 20 seconds.' }), cancel);
   }
   return h('div', null, topbar(null), body, h('p', { class: 'err', role: 'status', 'aria-live': 'polite', text: ui.err }));
 }
