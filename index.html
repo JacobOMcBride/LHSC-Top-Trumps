@@ -225,7 +225,8 @@ textarea.codebox:focus-visible { outline: 2px solid var(--brass); outline-offset
 @media (prefers-reduced-motion: reduce) { .chatbtn.ping { animation: none; } }
 .qr { width: min(260px, 70vw); height: auto; aspect-ratio: 1; border-radius: 6px; image-rendering: pixelated; }
 .bigcode { font-family: var(--f-ui); font-weight: 800; font-size: clamp(64px, 18vw, 112px); letter-spacing: .14em; padding-left: .14em; color: var(--brass); line-height: 1; margin: 6px 0 10px; user-select: all; }
-.joinrow { display: grid; grid-template-columns: 1fr auto; gap: 10px; }
+.joinrow { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; }
+.joinrow .btn { padding: 0 16px; }
 input.codein { text-align: center; text-transform: uppercase; font-family: var(--f-ui); font-weight: 800; font-size: 26px; letter-spacing: .3em; padding: 10px 12px 10px calc(12px + .3em); background: #0F1914; border: 1.5px solid var(--felt-line); color: var(--chalk); border-radius: 4px; min-width: 0; }
 input.codein:focus-visible { outline: 2px solid var(--brass); outline-offset: 1px; }
 </style>
@@ -2646,7 +2647,9 @@ function applyResign(g, who) {
 /* ---------- state (browser-to-browser link, matched by a short game code) ---------- */
 const Peer = (window.peerjs && window.peerjs.Peer) || undefined;
 let G = null, side = null, peer = null, dc = null;
-const ui = { sel: null, busy: false, err: '', confirmResign: false, shownKey: '', name: sget('lhsc.tt.name') || '', toast: '', net: null, code: '', mode: (sget('lhsc.tt.mode') === 'alternate' ? 'alternate' : 'winner'), solo: false, view: null, zoom: null };
+let specs = [];            /* spectators connected to this host */
+const MAX_SPECS = 8;
+const ui = { sel: null, busy: false, err: '', confirmResign: false, shownKey: '', name: sget('lhsc.tt.name') || '', toast: '', net: null, code: '', mode: (sget('lhsc.tt.mode') === 'alternate' ? 'alternate' : 'winner'), solo: false, view: null, zoom: null, watch: false, hostCode: '' };
 const app = document.getElementById('app');
 
 function say(msg) { ui.err = msg; }
@@ -2683,13 +2686,14 @@ function peerOpts() {
 function closePeer() {
   clearInterval(beat); clearTimeout(joinTimer);
   try { if (dc) { dc.off && dc.off('close'); dc.close(); } } catch (e) {}
+  specs.forEach(c => { try { c.off && c.off('close'); c.close(); } catch (e) {} }); specs = [];
   try { if (peer) peer.destroy(); } catch (e) {}
   dc = null; peer = null;
 }
 function lost() {
   if (!G && !ui.net) return;
   if (ui.net && !dc) return;
-  toLobby('The link to your opponent dropped. Start a new game to reconnect.');
+  toLobby(ui.watch ? 'The link to the game dropped.' : 'The link to your opponent dropped. Start a new game to reconnect.');
 }
 let lastRx = 0, beat = 0, joinTimer = 0;
 function startBeat(conn) {
@@ -2741,6 +2745,7 @@ function wireChannel(conn) {
       if (G && G.status === 'over' && m.s.status !== 'over' && (m.s.games || 0) <= (G.games || 0)) return;
       G = m.s; side = ui.net && ui.net.role === 'guest' || side === 'B' ? 'B' : 'A';
       if (ui.net) ui.net = null;
+      sendSpecs();
       render();
     }
   });
@@ -2748,12 +2753,16 @@ function wireChannel(conn) {
   conn.on('error', () => { if (dc === conn) lost(); });
   if (conn.open) onOpen();
 }
-addEventListener('pagehide', () => { try { if (dc && dc.open) dc.send({ t: 'bye' }); } catch (e) {} });
-function sendState() { if (dc && dc.open) { try { dc.send({ t: 'state', s: G }); } catch (e) {} } }
+addEventListener('pagehide', () => { try { if (dc && dc.open) dc.send({ t: 'bye' }); specs.forEach(c => { if (c.open) c.send({ t: 'bye' }); }); } catch (e) {} });
+function sendState() {
+  if (dc && dc.open) { try { dc.send({ t: 'state', s: G }); } catch (e) {} }
+  sendSpecs();
+}
+function sendSpecs() { specs.forEach(c => { if (c.open) { try { c.send({ t: 'state', s: G }); } catch (e) {} } }); }
 function write(state) { G = state; sendState(); render(); aiTick(); }
 
 function toLobby(msg) {
-  closePeer(); clearTimeout(aiTimer); ui.solo = false; chatReset();
+  closePeer(); clearTimeout(aiTimer); ui.solo = false; ui.watch = false; ui.hostCode = ''; chatReset();
   G = null; side = null; ui.net = null; ui.sel = null; ui.confirmResign = false; ui.shownKey = ''; ui.busy = false; ui.code = '';
   say(msg || '');
   render();
@@ -2771,12 +2780,13 @@ function hostStart(tries) {
   ui.name = cleanName(ui.name); sset('lhsc.tt.name', ui.name);
   closePeer();
   const code = newCode();
-  ui.net = { role: 'host', stage: 'making', code }; say(''); render();
+  ui.net = { role: 'host', stage: 'making', code }; ui.hostCode = code; say(''); render();
   const p = new Peer(PREFIX + code, peerOpts());
   peer = p;
   p.on('open', () => { if (peer !== p || !ui.net) return; ui.net.stage = 'invite'; render(); });
   p.on('connection', conn => {
     if (peer !== p) return;
+    if (conn.metadata && conn.metadata.role === 'watch') { addSpec(conn); return; }
     if (dc) { conn.on('open', () => conn.close()); return; }   /* one opponent only */
     ui.net.stage = 'connecting'; wireChannel(conn); render();
   });
@@ -2785,23 +2795,24 @@ function hostStart(tries) {
     if (err && err.type === 'unavailable-id' && tries < 5) { hostStart(tries + 1); return; }
     toLobby(peerProblem(err));
   });
-  p.on('disconnected', () => { if (peer === p && !dc && !p.destroyed) { try { p.reconnect(); } catch (e) {} } });
+  p.on('disconnected', () => { if (peer === p && !p.destroyed) { try { p.reconnect(); } catch (e) {} } });
 }
 
-function guestJoin() {
+function guestJoin(asWatcher) {
+  asWatcher = asWatcher === true;
   if (typeof Peer === 'undefined') { say('The connection library did not load. Try reloading this file.'); render(); return; }
   const code = cleanCode(ui.code);
   if (code.length !== 4) { say('Enter the 4-character game code from your friend.'); render(); return; }
   ui.name = cleanName(ui.name); sset('lhsc.tt.name', ui.name);
   closePeer();
-  ui.net = { role: 'guest', stage: 'making', code }; say(''); render();
+  ui.net = { role: asWatcher ? 'watch' : 'guest', stage: 'making', code }; ui.watch = asWatcher; say(''); render();
   const p = new Peer(peerOpts());
   peer = p;
   const fail = msg => { if (peer === p && !G && ui.net && ui.net.stage !== 'linked') toLobby(msg); };
   p.on('open', () => {
     if (peer !== p) return;
-    const conn = p.connect(PREFIX + code, { reliable: true, serialization: 'json' });
-    wireChannel(conn);
+    const conn = p.connect(PREFIX + code, { reliable: true, serialization: 'json', metadata: asWatcher ? { role: 'watch' } : undefined });
+    if (asWatcher) wireWatcher(conn); else wireChannel(conn);
     joinTimer = setTimeout(() => fail('Could not reach that game. Check the code, and make sure your friend is still on the waiting screen.'), 20000);
   });
   p.on('error', err => {
@@ -2834,10 +2845,15 @@ async function copyFrom(id, msg) {
 
 
 /* opened from a scanned code or a shared link: join straight away */
-(function () {
+function hashJoin() {
+  if (G || ui.net) return;
   const m = /join=([A-Za-z0-9]{4})/.exec(location.hash || '');
-  if (m) { ui.code = cleanCode(m[1]); setTimeout(guestJoin, 0); }
-})();
+  if (m) { ui.code = cleanCode(m[1]); setTimeout(() => guestJoin(false), 0); return; }
+  const w = /watch=([A-Za-z0-9]{4})/.exec(location.hash || '');
+  if (w) { ui.code = cleanCode(w[1]); setTimeout(() => guestJoin(true), 0); }
+}
+hashJoin();
+addEventListener('hashchange', hashJoin);
 
 /* ---------- play the computer ---------- */
 let aiTimer = 0;
@@ -2869,6 +2885,67 @@ function aiTick() {
   }
 }
 function setMode(m) { ui.mode = m === 'alternate' ? 'alternate' : 'winner'; sset('lhsc.tt.mode', ui.mode); render(); }
+
+/* ---------- spectators ---------- */
+function watchIce(conn, dead) {
+  const pc = conn.peerConnection; if (!pc || pc.__lhscWatch) return; pc.__lhscWatch = true;
+  let t = 0;
+  pc.addEventListener('iceconnectionstatechange', () => {
+    const st = pc.iceConnectionState; clearTimeout(t);
+    if (st === 'failed' || st === 'closed') dead();
+    else if (st === 'disconnected') t = setTimeout(dead, 15000);
+  });
+}
+/* host side: one more person watching */
+function addSpec(conn) {
+  if (specs.length >= MAX_SPECS) { conn.on('open', () => { try { conn.send({ t: 'full' }); } catch (e) {} setTimeout(() => conn.close(), 300); }); return; }
+  let added = false;
+  const drop = () => { const i = specs.indexOf(conn); if (i >= 0) { specs.splice(i, 1); render(); } };
+  const join = () => {
+    if (added) return; added = true; specs.push(conn);
+    if (G) { try { conn.send({ t: 'state', s: G }); } catch (e) {} }
+    render();
+  };
+  conn.on('open', join);
+  conn.on('data', m => {
+    if (!m || typeof m !== 'object') return;
+    if (m.t === 'ping') { try { conn.send({ t: 'ping' }); } catch (e) {} }
+    else if (m.t === 'hello' && G) { try { conn.send({ t: 'state', s: G }); } catch (e) {} }
+  });
+  conn.on('close', drop); conn.on('error', drop);
+  watchIce(conn, () => { try { conn.close(); } catch (e) {} drop(); });
+  if (conn.open) join();
+}
+/* spectator side */
+function wireWatcher(conn) {
+  dc = conn;
+  let opened = false;
+  const onOpen = () => {
+    if (opened) return; opened = true;
+    clearTimeout(joinTimer); startBeat(conn);
+    if (ui.net) ui.net.stage = 'linked';
+    try { conn.send({ t: 'hello' }); } catch (e) {}
+    render();
+  };
+  conn.on('open', onOpen);
+  conn.on('data', m => {
+    lastRx = Date.now();
+    if (!m || typeof m !== 'object' || m.t === 'ping') return;
+    if (m.t === 'bye') { toLobby('The host left, so the game ended.'); return; }
+    if (m.t === 'full') { toLobby('That game already has the maximum number of spectators.'); return; }
+    if (m.t === 'state' && m.s && m.s.hands && m.s.players) { G = m.s; side = 'A'; ui.net = null; render(); }
+  });
+  conn.on('close', () => { if (dc === conn) toLobby('The host left, so the game ended.'); });
+  conn.on('error', () => { if (dc === conn) lost(); });
+  watchIce(conn, () => { if (dc === conn) lost(); });
+  if (conn.open) onOpen();
+}
+function copyWatch() {
+  const link = location.href.split('#')[0] + '#watch=' + ui.hostCode + (/dev=[\w.-]+:\d+/.exec(location.hash || '') ? '&' + /dev=[\w.-]+:\d+/.exec(location.hash)[0] : '');
+  const done = ok => toast(ok ? 'Watch link copied' : 'Spectators choose Watch and type ' + ui.hostCode);
+  if (!hosted) { done(false); return; }
+  try { navigator.clipboard.writeText(link).then(() => done(true), () => done(false)); } catch (e) { done(false); }
+}
 
 /* ---------- chat (two-player games only; lives outside the table so typing is never interrupted) ---------- */
 const chat = { open: false, msgs: [], unread: 0, built: false };
@@ -2911,7 +2988,7 @@ function chatReceive(text) {
 }
 function chatReset() { chat.msgs = []; chat.unread = 0; chat.open = false; const l = document.getElementById('chatlog'); if (l) l.replaceChildren(); chatSync(); }
 function chatSync() {
-  const on = !!(G && !ui.solo && dc && side);
+  const on = !!(G && !ui.solo && !ui.watch && dc && side);
   if (!on && !chat.built) return;
   chatBuild();
   const btn = document.getElementById('chatbtn'), panel = document.getElementById('chatpanel'), badge = document.getElementById('chatbadge');
@@ -2953,6 +3030,8 @@ function topbar(extra) {
     h('div', { class: 'meta' }, extra));
 }
 
+function specChip() { return specs.length ? h('span', { class: 'chip series', text: specs.length + (specs.length === 1 ? ' watching' : ' watching') }) : null; }
+function watchBtn() { return side === 'A' && ui.hostCode && !ui.solo ? h('button', { class: 'btn small ghost', type: 'button', onclick: copyWatch, text: 'Invite a spectator' }) : null; }
 function modeChip() { return h('span', { class: 'chip series', text: G && G.mode === 'alternate' ? 'Taking turns' : 'Winner picks' }); }
 function metrics(reveal) {
   const avail = app.clientWidth || 360;
@@ -2988,7 +3067,7 @@ function pileStrip(s, meName, opName) {
   // cards in play for this round sit on the table, not in a hand, but stay counted until collected
   return h('div', null,
     h('div', { class: 'pile' },
-      h('div', { class: 'who' }, h('span', { class: 'ct', text: String(s.hands[me].length) }), h('span', { class: 'nm', text: 'You' })),
+      h('div', { class: 'who' }, h('span', { class: 'ct', text: String(s.hands[me].length) }), h('span', { class: 'nm', text: ui.watch ? meName : 'You' })),
       h('div', { class: 'segs', role: 'img', 'aria-label': 'Cards: you ' + s.hands[me].length + ', pot ' + s.pot.length + ', ' + opName + ' ' + s.hands[op].length }, segs.map(k => h('i', { class: k }))),
       h('div', { class: 'who opp' }, h('span', { class: 'nm', text: opName }), h('span', { class: 'ct', text: String(s.hands[op].length) }))),
     h('div', { class: 'potnote', text: s.pot.length ? 'Pot: ' + s.pot.length + ' cards waiting for the next winner' : '' }));
@@ -3041,9 +3120,9 @@ function table() {
   const series = (s.series.A || s.series.B) ? h('span', { class: 'chip series', text: 'Series ' + s.series[me] + '–' + s.series[op] }) : null;
   const foot = ui.confirmResign
     ? h('div', { class: 'foot' }, h('span', { class: 'note', text: 'Give the game to ' + opName + '?' }), h('button', { class: 'btn small danger', type: 'button', onclick: resign, text: 'Yes, resign' }), h('button', { class: 'btn small ghost', type: 'button', onclick: () => { ui.confirmResign = false; render(); }, text: 'Keep playing' }))
-    : h('div', { class: 'foot' }, h('button', { class: 'btn small ghost', type: 'button', onclick: () => { ui.confirmResign = true; render(); }, text: 'Resign' }));
+    : h('div', { class: 'foot' }, watchBtn(), h('button', { class: 'btn small ghost', type: 'button', onclick: () => { ui.confirmResign = true; render(); }, text: 'Resign' }));
   return h('div', null,
-    topbar([series, modeChip(), h('span', { class: 'chip', text: ui.solo ? 'Vs computer' : 'Connected' })]),
+    topbar([series, modeChip(), specChip(), h('span', { class: 'chip', text: ui.solo ? 'Vs computer' : 'Connected' })]),
     banner(s, meName, opName),
     pileStrip(s, meName, opName),
     h('div', { class: 'duel' }, seats),
@@ -3061,7 +3140,7 @@ function over() {
   const sub = tie ? 'Both hands ran out together.' : (s.reason === 'resigned' ? (won ? opName + ' resigned.' : 'You resigned.') : (won ? 'You took every card.' : opName + ' took every card.'));
   const series = (s.series.A || s.series.B) ? h('span', { class: 'chip series', text: 'Series ' + s.series[me] + '–' + s.series[op] }) : null;
   const host = side === 'A';
-  return h('div', null, topbar([series, modeChip(), h('span', { class: 'chip', text: ui.solo ? 'Vs computer' : 'Connected' })]),
+  return h('div', null, topbar([series, modeChip(), specChip(), h('span', { class: 'chip', text: ui.solo ? 'Vs computer' : 'Connected' })]),
     h('div', { class: 'over' },
       h('div', { class: 'kick', text: 'Game over after ' + (s.round - 1) + ' rounds' }),
       h('div', { class: 'final ' + (tie ? '' : (won ? 'win' : 'lose')), text: headline }),
@@ -3085,7 +3164,7 @@ function lobby() {
   const nameIn = h('input', { type: 'text', id: 'pname', maxlength: '16', placeholder: 'Your name', value: ui.name, autocomplete: 'nickname', oninput: e => { ui.name = e.target.value; } });
   const codeIn = h('input', { type: 'text', id: 'jcode', class: 'codein', maxlength: '4', placeholder: 'CODE', value: ui.code, autocomplete: 'off', autocapitalize: 'characters', spellcheck: 'false', 'aria-label': 'Game code',
     oninput: e => { const v = cleanCode(e.target.value); e.target.value = v; ui.code = v; },
-    onkeydown: e => { if (e.key === 'Enter') guestJoin(); } });
+    onkeydown: e => { if (e.key === 'Enter') guestJoin(false); } });
   const fanCards = [0, 14, 22].map(i => slot(cardEl(CARDS[i]), 0.62));
   return h('div', null, topbar(null),
     h('div', { class: 'lobby' },
@@ -3100,8 +3179,8 @@ function lobby() {
         h('button', { class: 'btn', type: 'button', onclick: () => startSolo(), text: 'Play the computer' }),
         h('button', { class: 'btn ghost', type: 'button', onclick: () => hostStart(0), text: 'Host a game for a friend' }),
         h('div', { class: 'or', text: 'or join a friend with a code' }),
-        h('div', { class: 'joinrow' }, codeIn, h('button', { class: 'btn ghost', type: 'button', onclick: guestJoin, text: 'Join' })),
-        h('p', { class: 'note', text: 'When you join, the host’s pick rule applies.' }),
+        h('div', { class: 'joinrow' }, codeIn, h('button', { class: 'btn ghost', type: 'button', onclick: () => guestJoin(false), text: 'Join' }), h('button', { class: 'btn ghost', type: 'button', onclick: () => guestJoin(true), text: 'Watch' })),
+        h('p', { class: 'note', text: 'Join to play, or Watch to follow a game as a spectator. The host’s pick rule applies.' }),
         h('p', { class: 'err', role: 'status', 'aria-live': 'polite', text: ui.err }))));
 }
 
@@ -3147,16 +3226,64 @@ function signal() {
         h('button', { class: hosted ? 'btn small ghost' : 'btn small', type: 'button', onclick: async () => { let ok = false; try { await navigator.clipboard.writeText(n.code); ok = true; } catch (e) {} toast(ok ? 'Code copied' : 'Code: ' + n.code); }, text: 'Copy code' }), cancel));
     else body = h('div', { class: 'waiting' }, h('h2', null, 'Connecting', h('span', { class: 'dots' })), h('p', { class: 'note', text: 'Keep this page open. The cards are dealt as soon as the link is up.' }), cancel);
   } else {
-    body = h('div', { class: 'waiting' }, h('h2', null, n.stage === 'linked' ? 'Linked' : 'Joining game ' + n.code, h('span', { class: 'dots' })), h('p', { class: 'note', text: n.stage === 'linked' ? 'Waiting for the host to deal.' : 'Looking for your friend’s game.' }), cancel);
+    const w = n.role === 'watch';
+    body = h('div', { class: 'waiting' }, h('h2', null, n.stage === 'linked' ? (w ? 'Watching' : 'Linked') : (w ? 'Finding game ' : 'Joining game ') + (n.stage === 'linked' ? '' : n.code), h('span', { class: 'dots' })), h('p', { class: 'note', text: n.stage === 'linked' ? (w ? 'Waiting for the game to start.' : 'Waiting for the host to deal.') : 'Looking for your friend’s game.' }), cancel);
   }
   return h('div', null, topbar(null), body, h('p', { class: 'err', role: 'status', 'aria-live': 'polite', text: ui.err }));
+}
+
+
+/* ---------- spectator screens ---------- */
+function specBanner(s) {
+  const A = s.players.A.name, B = s.players.B.name;
+  if (s.phase === 'choose') {
+    const who = s.players[s.chooser].name;
+    return h('div', { class: 'banner' }, h('div', { class: 'kick', text: 'Round ' + s.round }), h('div', { class: 'big' }, who + ' is choosing', h('span', { class: 'dots' })), h('div', { class: 'note', text: 'Cards stay hidden until the pick is made.' }));
+  }
+  const p = s.pick;
+  const ca = p.res === 'draw' ? '' : (p.res === 'A' ? 'win' : 'lose'), cb = p.res === 'draw' ? '' : (p.res === 'B' ? 'win' : 'lose');
+  const verdict = p.res === 'draw' ? 'Dead level. Into the pot.' : s.players[p.res].name + ' wins the round';
+  return h('div', { class: 'banner' },
+    h('div', { class: 'kick', text: 'Round ' + s.round + ' · ' + STATS[p.stat] }),
+    h('div', { class: 'vs', 'aria-label': A + ' ' + p.va + ', ' + B + ' ' + p.vb }, h('span', { class: 'v ' + ca, text: String(p.va) }), h('span', { class: 'x', text: 'v' }), h('span', { class: 'v ' + cb, text: String(p.vb) })),
+    h('div', { class: 'verdict ' + (p.res === 'draw' ? '' : ca), text: verdict }));
+}
+function specTable() {
+  const s = G; side = 'A';
+  const A = s.players.A.name, B = s.players.B.name;
+  const reveal = s.phase === 'reveal', p = s.pick;
+  const avail = app.clientWidth || 360, sc = Math.min(1.4, (avail - 16) / 2 / 238);
+  const key = s.games + ':' + s.round + ':' + s.phase; const fresh = key !== ui.shownKey; ui.shownKey = key;
+  const cls = k => reveal && p.res !== 'draw' ? (p.res === k ? 'win' : 'lose') : '';
+  const seat = (k, name) => h('div', { class: 'seat' }, h('div', { class: 'tag', text: name }),
+    reveal ? slot(cardEl(CARDS[s.hands[k][0]], { hi: p.stat }), sc, cls(k) + (fresh ? ' flipin' : '')) : slot(backEl(), sc));
+  const series = (s.series.A || s.series.B) ? h('span', { class: 'chip series', text: 'Series ' + s.series.A + '–' + s.series.B }) : null;
+  return h('div', null,
+    topbar([series, modeChip(), h('span', { class: 'chip', text: 'Watching' })]),
+    specBanner(s), pileStrip(s, A, B),
+    h('div', { class: 'duel' }, seat('A', A), seat('B', B)),
+    h('div', { class: 'foot' }, h('button', { class: 'btn small ghost', type: 'button', onclick: () => toLobby(''), text: 'Stop watching' })));
+}
+function specOver() {
+  const s = G;
+  const tie = s.winner === 'draw';
+  const wn = tie ? '' : s.players[s.winner].name, ln = tie ? '' : s.players[other(s.winner)].name;
+  const series = (s.series.A || s.series.B) ? h('span', { class: 'chip series', text: 'Series ' + s.series.A + '–' + s.series.B }) : null;
+  return h('div', null, topbar([series, modeChip(), h('span', { class: 'chip', text: 'Watching' })]),
+    h('div', { class: 'over' },
+      h('div', { class: 'kick', text: 'Game over after ' + (s.round - 1) + ' rounds' }),
+      h('div', { class: 'final ' + (tie ? '' : 'win'), text: tie ? 'Dead heat' : wn + ' wins' }),
+      h('p', { class: 'note', text: tie ? 'Both hands ran out together.' : (s.reason === 'resigned' ? ln + ' resigned.' : wn + ' took every card.') }),
+      h('div', { class: 'wait' }, 'Waiting to see if they play again', h('span', { class: 'dots' })),
+      h('button', { class: 'btn ghost small', type: 'button', onclick: () => toLobby(''), text: 'Stop watching' })));
 }
 
 function render() {
   const active = document.activeElement;
   const keep = active && active.id ? { id: active.id, s: active.selectionStart, e: active.selectionEnd } : null;
   let view;
-  if (ui.view === 'cards' && !G && !ui.net) view = cardsScreen();
+  if (ui.watch && G) view = G.status === 'over' ? specOver() : specTable();
+  else if (ui.view === 'cards' && !G && !ui.net) view = cardsScreen();
   else if (G && G.status === 'over') view = over();
   else if (G) view = table();
   else if (ui.net) view = signal();
