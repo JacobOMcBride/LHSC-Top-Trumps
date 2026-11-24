@@ -3125,7 +3125,7 @@ const PERSONAS = {
   },
   normal: {
     name: 'Range Officer', tag: 'Safe, steady, fair',
-    greet: ['Range is hot. Pick your stat.', 'Rules are simple. Highest card wins. Mostly.'],
+    greet: ['Range is hot. Pick your stat.', '{RULE}'],
     win: ['Muzzles down, please. That one is mine.', 'Cease fire. I will take those.', 'Point taken. Literally.', 'Within tolerance. Barely.'],
     lose: ['Noted for the incident log.', 'Lucky. Not safe, but lucky.', 'That was within tolerance.', 'I will allow it.'],
     cheyl: ['Careful with Cheylesmore. We do not want to trigger a federal investigation.', 'Cheylesmore on the table. Nobody mention a federal investigation.', 'Ah, Cheylesmore. Do be careful not to trigger a federal investigation.'],
@@ -3223,7 +3223,7 @@ function aiWatch() {
   if (!key || key === aiNote.key) return;
   aiNote.key = key;
   const kind = key[0];
-  if (kind === 'g') { if (G.games === 1 || randInt(2)) { const g = G.games; setTimeout(() => { if (ui.solo && G && G.games === g) aiSay(pickOf(P.greet)); }, 700); } return; }
+  if (kind === 'g') { if (G.games === 1 || randInt(2)) { const g = G.games; setTimeout(() => { if (ui.solo && G && G.games === g) aiSay(pickOf(P.greet).replace('{RULE}', G.rule === 'low' ? 'Lowest card wins this one. A tie goes in the pot.' : 'Highest card wins. A tie goes in the pot.')); }, 700); } return; }
   if (kind === 'r') {
     const CH = cardNo('Cheylesmore (Lord Chelmsford) Range');
     if (P.cheyl && (G.pick.a === CH || G.pick.b === CH) && (aiNote.cheylGame !== G.games || randInt(100) < 25)) {
