@@ -2714,7 +2714,10 @@ function rid() { const a = new Uint8Array(8); crypto.getRandomValues(a); return 
 function shuffle(arr) { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = randInt(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 function clone(o) { return JSON.parse(JSON.stringify(o)); }
 function genCode() { const L = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; let s = ''; for (let i = 0; i < 4; i++) s += L[randInt(L.length)]; return s; }
-function cleanName(s) { s = String(s || '').replace(/\s+/g, ' ').trim().slice(0, 16); return s || 'Player'; }
+/* name easter eggs */
+const NAME_EGGS = { sam: 'The Premier', jay: 'Old man Jay' };
+function aliasName(s) { s = String(s || '').replace(/\s+/g, ' ').trim(); return NAME_EGGS[s.toLowerCase()] || s; }
+function cleanName(s) { s = aliasName(s).slice(0, 16); return s || 'Player'; }
 function h(tag, props, ...kids) {
   const e = document.createElement(tag);
   if (props) for (const [k, v] of Object.entries(props)) {
@@ -3879,7 +3882,7 @@ function diffPick() {
 }
 
 function lobby() {
-  const nameIn = h('input', { type: 'text', id: 'pname', maxlength: '16', placeholder: 'Your name', value: ui.name, autocomplete: 'nickname', oninput: e => { ui.name = e.target.value; } });
+  const nameIn = h('input', { type: 'text', id: 'pname', maxlength: '16', placeholder: 'Your name', value: ui.name, autocomplete: 'nickname', oninput: e => { ui.name = e.target.value; }, onchange: e => { const a = aliasName(e.target.value); if (a !== e.target.value.trim()) { e.target.value = a; ui.name = a; } } });
   const codeIn = h('input', { type: 'text', id: 'jcode', class: 'codein', maxlength: '4', placeholder: 'CODE', value: ui.code, autocomplete: 'off', autocapitalize: 'characters', spellcheck: 'false', 'aria-label': 'Game code',
     oninput: e => { const v = cleanCode(e.target.value); e.target.value = v; ui.code = v; },
     onkeydown: e => { if (e.key === 'Enter') guestJoin(false); } });
