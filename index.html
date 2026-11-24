@@ -308,6 +308,9 @@ input.codein:focus-visible { outline: 2px solid var(--brass); outline-offset: 1p
 .chip.codechip b { color: var(--brass); font-weight: 800; letter-spacing: .2em; margin-left: 4px; font-size: 16px; }
 .chip.codechip:hover { background: rgba(217,182,90,.12); }
 .chip.codechip:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+.codebox { flex: 1 0 100%; display: grid; justify-items: center; gap: 2px; padding: 10px 14px; margin-bottom: 4px; border: 1.5px dashed var(--brass); border-radius: 6px; background: rgba(217,182,90,.07); }
+.codelab { font-family: var(--f-ui); font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--chalk-dim); text-align: center; }
+.codebig { font-family: var(--f-ui); font-weight: 800; font-size: 44px; line-height: 1.05; letter-spacing: .3em; padding-left: .3em; color: var(--brass); user-select: all; }
 .lobby { align-items: start; }
 @media (min-width: 781px) { .lobby .hero { position: sticky; top: 24px; align-self: start; } }
 @media (min-width: 781px) and (max-height: 740px) { .lobby .hero .fan { display: none; } }
@@ -3549,9 +3552,10 @@ function topbar(extra) {
     h('div', { class: 'meta' }, extra));
 }
 
+function codeBox() { const c = gameCode(); return c ? h('div', { class: 'codebox' }, h('span', { class: 'codelab', text: 'Game code · tell it to anyone who wants to watch' }), h('b', { class: 'codebig', 'aria-label': 'Game code ' + c.split('').join(' '), text: c })) : null; }
 function codeChip() { const c = gameCode(); return c ? h('button', { class: 'chip codechip', type: 'button', title: 'Tap to copy a link for someone who wants to watch', 'aria-label': 'Game code ' + c.split('').join(' ') + '. Tap to copy a watch link.', onclick: copyWatch }, 'Code ', h('b', { text: c })) : null; }
 function specChip() { const n = watchCount(); return n ? h('span', { class: 'chip series', text: n + ' watching' }) : null; }
-function watchBtn() { return side === 'A' && ui.hostCode && !ui.solo ? h('button', { class: 'btn small ghost', type: 'button', onclick: copyWatch, text: 'Invite a spectator' }) : null; }
+function watchBtn() { return side === 'A' && ui.hostCode && !ui.solo ? h('button', { class: 'btn small ghost', type: 'button', onclick: copyWatch, text: 'Copy watch link' }) : null; }
 function modeChip() { return h('span', { class: 'chip series', text: G && G.mode === 'alternate' ? 'Taking turns' : 'Winner picks' }); }
 function metrics(reveal) {
   const avail = app.clientWidth || 360;
@@ -3640,7 +3644,7 @@ function table() {
   const series = seriesChip(s, me);
   const foot = ui.confirmResign
     ? h('div', { class: 'foot' }, h('span', { class: 'note', text: (isMatch(s) ? 'Forfeit the match to ' : 'Give the game to ') + opName + '?' }), h('button', { class: 'btn small danger', type: 'button', onclick: resign, text: 'Yes, resign' }), h('button', { class: 'btn small ghost', type: 'button', onclick: () => { ui.confirmResign = false; render(); }, text: 'Keep playing' }))
-    : h('div', { class: 'foot' }, handBtn(), watchBtn(), talkBtn(), h('button', { class: 'btn small ghost', type: 'button', onclick: () => { ui.confirmResign = true; render(); }, text: 'Resign' }));
+    : h('div', { class: 'foot' }, codeBox(), handBtn(), watchBtn(), talkBtn(), h('button', { class: 'btn small ghost', type: 'button', onclick: () => { ui.confirmResign = true; render(); }, text: 'Resign' }));
   return h('div', null,
     topbar([series, codeChip(), modeChip(), rulesChip(), specChip(), h('span', { class: 'chip', text: ui.solo ? 'Vs computer' : 'Connected' })]),
     banner(s, meName, opName),
@@ -3980,7 +3984,7 @@ function specTable() {
     specBanner(s), pileStrip(s, A, B),
     h('div', { class: 'duel' }, seat('A', A), seat('B', B)),
     predictPanel(s), reactBar(),
-    h('div', { class: 'foot' }, h('button', { class: 'btn small ghost', type: 'button', onclick: () => toLobby(''), text: 'Stop watching' })));
+    h('div', { class: 'foot' }, codeBox(), h('button', { class: 'btn small ghost', type: 'button', onclick: () => toLobby(''), text: 'Stop watching' })));
 }
 function specOver() {
   const s = G;
@@ -3997,6 +4001,7 @@ function specOver() {
       h('p', { class: 'note', text: note }),
       predictPanel(s), reactBar(),
       h('div', { class: 'wait' }, 'Waiting to see if they play again', h('span', { class: 'dots' })),
+      codeBox(),
       h('button', { class: 'btn ghost small', type: 'button', onclick: () => toLobby(''), text: 'Stop watching' })));
 }
 
