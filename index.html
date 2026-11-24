@@ -339,9 +339,21 @@ input.codein:focus-visible { outline: 2px solid var(--brass); outline-offset: 1p
 .rulereq p { margin: 0; font-size: 17px; }
 .rulereq .rr { color: var(--brass); }
 .rulereq .row { display: flex; gap: 10px; justify-content: center; }
+.cfwrap { margin-top: 18px; max-width: 520px; }
+.cflow { --cs: .7; position: relative; height: calc(333px * var(--cs) + 54px); perspective: 1000px; overflow: hidden; touch-action: pan-y; cursor: grab; user-select: none; -webkit-user-select: none; outline-offset: 2px; border-radius: 6px; }
+.cflow:active { cursor: grabbing; }
+.cflow:focus-visible { outline: 2px solid var(--brass); }
+.cfstage { position: absolute; inset: 0; transform-style: preserve-3d; }
+.cfi { position: absolute; top: 8px; left: 50%; width: calc(238px * var(--cs)); height: calc(333px * var(--cs)); margin-left: calc(-119px * var(--cs)); will-change: transform; box-shadow: 0 10px 26px rgba(0,0,0,.5); -webkit-box-reflect: below 3px linear-gradient(transparent 62%, rgba(255,255,255,.22)); }
+.cflow .slot { --s: var(--cs) !important; }
+.cfbar { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 6px; }
+.cfbar .btn { min-width: 44px; padding-left: 0; padding-right: 0; font-size: 22px; line-height: 1; }
+.cfcap { font-family: var(--f-ui); font-weight: 700; font-size: 15px; letter-spacing: .08em; text-transform: uppercase; color: var(--chalk-dim); text-align: center; min-width: 0; flex: 1; white-space: pre; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 780px) { .cflow { --cs: .6; } }
+.brand img, .herologo { -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
 .lobby { align-items: start; }
 @media (min-width: 781px) { .lobby .hero { position: sticky; top: 24px; align-self: start; } }
-@media (min-width: 781px) and (max-height: 740px) { .lobby .hero .fan { display: none; } }
+@media (min-width: 781px) and (max-height: 800px) { .lobby .hero .cfwrap { display: none; } }
 @media (min-width: 781px) and (max-height: 600px) { .lobby .hero { position: static; } }
 .herologo { width: 84px; height: 84px; display: block; margin: 0 0 14px; filter: drop-shadow(0 4px 10px rgba(0,0,0,.45)); }
 @keyframes unfurl { from { transform: scaleY(0); } 70% { transform: scaleY(1.07); } to { transform: scaleY(1); } }
@@ -3504,7 +3516,14 @@ function predictPanel(s) {
 }
 
 /* ---------- secret mod menu: appears in a game when the player name is JD, Jacob, BMOJ or CD ---------- */
-const modName = () => /^(jd|jacob|bmoj|cd)$/i.test(String(ui.name || '').trim());
+ui.modKey = sget('lhsc.tt.mod') === '1';                                  /* unlocked by tapping the star 7 times; tap 7 times again to lock */
+const modName = () => ui.modKey || /^(jd|jacob|bmoj|cd)$/i.test(String(ui.name || '').trim());
+let starTaps = 0, starT = 0;
+document.addEventListener('click', e => {
+  const t = e.target && e.target.closest && e.target.closest('.brand img, .herologo'); if (!t) return;
+  const now = Date.now(); starTaps = now - starT < 1500 ? starTaps + 1 : 1; starT = now;
+  if (starTaps >= 7) { starTaps = 0; ui.modKey = !ui.modKey; sset('lhsc.tt.mod', ui.modKey ? '1' : '0'); ui.mod.told = true; if (!ui.modKey) ui.mod.open = false; toast(ui.modKey ? 'Mod menu unlocked' : 'Mod menu locked'); }
+}, true);
 const modOn = () => !!(G && G.status === 'playing' && !ui.watch && side && modName());
 ui.mod = { open: false, xray: false, told: false };
 const modXray = () => modOn() && ui.mod.xray;
@@ -3605,12 +3624,90 @@ function modSync() {
     document.body.append(btn, panel);
   }
   btn.hidden = false; panel.hidden = !ui.mod.open;
-  if (!ui.mod.told) { ui.mod.told = true; setTimeout(() => toast('Mod menu unlocked'), 400); }
+  if (!ui.mod.told) { ui.mod.told = true; setTimeout(() => { if (modOn()) toast('Mod menu unlocked'); }, 400); }
   if (!ui.mod.open) return;
   const keep = panel.querySelector('.modbody'), top = keep ? keep.scrollTop : 0;
   panel.replaceChildren(...modPanel());
   const nb = panel.querySelector('.modbody'); if (nb) nb.scrollTop = top;
 }
+
+/* ---------- start screen: swipe through the cards like an old iPod album screen ---------- */
+const CF = { pos: randInt(CARDS.length), target: 0, el: null, items: [], cap: null, anim: 0, k: 0.7 };   /* a random card in the middle on every page load */
+const cfWrap = p => { const n = CARDS.length; return ((p % n) + n) % n; };
+function cfScale() { const r = CF.el && getComputedStyle(CF.el).getPropertyValue('--cs'); return parseFloat(r) || 0.7; }
+function cfApply() {
+  if (!CF.el) return;
+  const n = CARDS.length, k = CF.k = cfScale(), unit = 238 * k;
+  const mid = Math.round(CF.pos);
+  CF.items.forEach((it, i) => {
+    let off = i - CF.pos; off = off - Math.round(off / n) * n;              /* shortest way round the ring */
+    const a = Math.abs(off), sgn = off < 0 ? -1 : 1, c = Math.min(a, 1);
+    const x = off * unit * 0.26 + sgn * c * unit * 0.5;
+    const z = -c * 150 - Math.max(0, a - 1) * 24;
+    const r = -Math.max(-1, Math.min(1, off)) * 62;
+    it.style.transform = 'translateX(' + x.toFixed(1) + 'px) translateZ(' + z.toFixed(1) + 'px) rotateY(' + r.toFixed(1) + 'deg)';
+    it.style.zIndex = String(200 - Math.round(a * 10));
+    it.style.opacity = a > 3.6 ? '0' : a > 3 ? String((3.6 - a) / 0.6) : '1';
+    it.style.pointerEvents = a > 3.2 ? 'none' : '';
+    it.style.filter = a < 0.02 ? '' : 'brightness(' + (1 - Math.min(0.45, c * 0.3 + Math.max(0, a - 1) * 0.08)).toFixed(2) + ')';
+    it.tabIndex = -1; it.setAttribute('aria-hidden', i === cfWrap(mid) ? 'false' : 'true');
+  });
+  if (CF.cap) CF.cap.textContent = CARDS[cfWrap(mid)].n + '  ·  ' + (cfWrap(mid) + 1) + ' / ' + n;
+}
+function cfGo(target, instant) {
+  cancelAnimationFrame(CF.anim); CF.target = target;
+  const from = CF.pos, to = target, t0 = performance.now(), dur = Math.min(520, 180 + Math.abs(to - from) * 90);
+  let reduce = false; try { reduce = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+  if (instant || reduce) { CF.pos = to; CF.anim = 0; cfApply(); return; }
+  const step = now => { const t = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - t, 3); CF.pos = from + (to - from) * e; cfApply(); if (t < 1) CF.anim = requestAnimationFrame(step); else CF.anim = 0; };
+  CF.anim = requestAnimationFrame(step);
+}
+const cfStep = d => cfGo((CF.anim && Math.abs(CF.pos - CF.target) > 0.01 ? CF.target : Math.round(CF.pos)) + d);
+function cfOpen(i) { ui.view = 'cards'; ui.zoom = i; render(); scrollTo(0, 0); }
+function coverflow() {
+  if (CF.el) return CF.el;                                                  /* built once; the same element is reused on every re-render, so it keeps its place */
+  const caption = h('div', { class: 'cfcap', 'aria-live': 'polite' });
+  const stage = h('div', { class: 'cfstage' });
+  CF.items = CARDS.map((c, i) => {
+    const it = h('div', { class: 'cfi', 'aria-label': c.n }, slot(cardEl(c), 0.7));
+    stage.append(it); return it;
+  });
+  const root = h('div', { class: 'cflow', role: 'group', 'aria-roledescription': 'carousel', 'aria-label': 'The cards. Swipe, or use the arrow keys.', tabindex: '0' }, stage);
+  const wrap = h('div', { class: 'cfwrap' }, root,
+    h('div', { class: 'cfbar' }, h('button', { class: 'btn small ghost', type: 'button', 'aria-label': 'Previous card', onclick: () => cfStep(-1), text: '‹' }), caption, h('button', { class: 'btn small ghost', type: 'button', 'aria-label': 'Next card', onclick: () => cfStep(1), text: '›' })));
+  CF.el = root; CF.cap = caption;
+  /* drag to spin: the cards follow the finger, then settle on the nearest one with a little momentum */
+  let down = null;
+  root.addEventListener('pointerdown', e => { if (e.button) return; cancelAnimationFrame(CF.anim); down = { x: e.clientX, y: e.clientY, pos: CF.pos, t: performance.now(), lx: e.clientX, lt: performance.now(), v: 0, id: e.pointerId }; CF.moved = false; });
+  root.addEventListener('pointermove', e => {
+    if (!down || e.pointerId !== down.id) return;
+    const dx = e.clientX - down.x;
+    if (!CF.moved && Math.abs(dx) < 6) return;
+    if (!CF.moved) { CF.moved = true; try { root.setPointerCapture(e.pointerId); } catch (x) {} }
+    const now = performance.now(), dt = Math.max(1, now - down.lt); down.v = 0.7 * down.v + 0.3 * ((e.clientX - down.lx) / dt); down.lx = e.clientX; down.lt = now;
+    CF.pos = down.pos - dx / (CF.k * 238 * 0.52); cfApply();
+  });
+  const end = e => {
+    if (!down || (e && e.pointerId !== down.id)) return;
+    const d = down; down = null;
+    if (!CF.moved && e && e.type === 'pointerup') {                           /* a tap: the middle card opens, a side card spins to the middle */
+      const r = root.getBoundingClientRect(), dx = e.clientX - (r.left + r.width / 2), unit = 238 * CF.k, half = unit * 0.5;
+      if (Math.abs(dx) <= half) cfOpen(cfWrap(Math.round(CF.pos)));
+      else cfGo(Math.round(CF.pos) + Math.sign(dx) * Math.max(1, Math.min(3, Math.round((Math.abs(dx) - half) / (unit * 0.26)) + 1)));
+      return;
+    }
+    if (CF.moved) { const fling = -d.v * 180 / (CF.k * 238 * 0.52); cfGo(Math.round(CF.pos + Math.max(-2, Math.min(2, fling)))); setTimeout(() => { CF.moved = false; }, 60); }
+  };
+  root.addEventListener('pointerup', end); root.addEventListener('pointercancel', end);
+  root.addEventListener('keydown', e => { if (e.key === 'ArrowLeft') { e.preventDefault(); cfStep(-1); } else if (e.key === 'ArrowRight') { e.preventDefault(); cfStep(1); } else if (e.key === 'Enter') { e.preventDefault(); cfOpen(cfWrap(Math.round(CF.pos))); } });
+  let wheelT = 0;                                                             /* two-finger swipe on a trackpad */
+  root.addEventListener('wheel', e => { if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return; e.preventDefault(); cancelAnimationFrame(CF.anim); CF.pos += e.deltaX / 160; cfApply(); clearTimeout(wheelT); wheelT = setTimeout(() => cfGo(Math.round(CF.pos)), 110); }, { passive: false });
+  addEventListener('resize', () => cfApply());
+  CF.pos = Math.round(CF.pos); queueMicrotask(cfApply); requestAnimationFrame(cfApply);
+  return wrap;
+}
+let cfWrapEl = null;
+function coverflowNode() { if (!cfWrapEl) cfWrapEl = coverflow(); return cfWrapEl; }
 
 /* ---------- switching highest/lowest wins mid-game: ask, and the other player has to agree ---------- */
 const ruleLabel = r => (r === 'low' ? 'Lowest wins' : 'Highest wins');
@@ -3902,8 +3999,7 @@ function cerBanners(id, xs, cols) {
       '<path d="M0 0H76V150L38 128L0 150Z" fill="' + c + '" stroke="#D9B65A" stroke-width="3" stroke-linejoin="round"/>' +
       '<path d="M7 8H69V132L38 114L7 132Z" fill="none" stroke="rgba(217,182,90,.55)" stroke-width="1.5"/>' +
       '<use href="#' + id + 's" x="14" y="20" width="48" height="48"/>' +
-      '<text x="38" y="92" text-anchor="middle" class="cert" fill="#EEE5CE">LHSC</text>' +
-      '<text x="38" y="106" text-anchor="middle" class="cers" fill="#D9B65A">1 · 2 · 3</text>' +
+      '<text x="38" y="98" text-anchor="middle" class="cert" fill="#EEE5CE">LHSC</text>' +
       '</g></g>';
   }).join('');
 }
@@ -4099,14 +4195,13 @@ function lobby() {
   const codeIn = h('input', { type: 'text', id: 'jcode', class: 'codein', maxlength: '4', placeholder: 'CODE', value: ui.code, autocomplete: 'off', autocapitalize: 'characters', spellcheck: 'false', 'aria-label': 'Game code',
     oninput: e => { const v = cleanCode(e.target.value); e.target.value = v; ui.code = v; },
     onkeydown: e => { if (e.key === 'Enter') guestJoin(false); } });
-  const fanCards = [0, 14, 22].map(i => slot(cardEl(CARDS[i]), 0.62));
   return h('div', null, topbar(null),
     h('div', { class: 'lobby' },
       h('div', { class: 'hero' },
         h('img', { class: 'herologo', src: src(LOGO), alt: 'LHSC' }),
         h('h1', null, 'LHSC', h('em', { text: 'Top Trumps' })),
         h('p', { class: 'lead', text: 'Twenty-four cards of Bisley. Pick your best stat and take them all.' }),
-        h('div', { class: 'fan', 'aria-hidden': 'true' }, fanCards),
+        coverflowNode(),
         h('button', { class: 'btn ghost small viewall', type: 'button', onclick: () => { ui.view = 'cards'; ui.zoom = null; render(); scrollTo(0, 0); }, text: 'View all 24 cards' })),
       h('div', { class: 'panel' },
         h('div', { class: 'field' }, h('label', { for: 'pname', text: 'Your name' }), nameIn),
