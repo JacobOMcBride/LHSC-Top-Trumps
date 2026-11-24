@@ -311,6 +311,34 @@ input.codein:focus-visible { outline: 2px solid var(--brass); outline-offset: 1p
 .codebox { flex: 1 0 100%; display: grid; justify-items: center; gap: 2px; padding: 10px 14px; margin-bottom: 4px; border: 1.5px dashed var(--brass); border-radius: 6px; background: rgba(217,182,90,.07); }
 .codelab { font-family: var(--f-ui); font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--chalk-dim); text-align: center; }
 .codebig { font-family: var(--f-ui); font-weight: 800; font-size: 44px; line-height: 1.05; letter-spacing: .3em; padding-left: .3em; color: var(--brass); user-select: all; }
+.modbtn { position: fixed; z-index: 19; left: max(14px, env(safe-area-inset-left, 0px)); bottom: max(66px, calc(env(safe-area-inset-bottom, 0px) + 62px)); appearance: none; cursor: pointer; padding: 8px 13px; border-radius: 20px; border: 1.5px solid #5CFF8A; background: #07120B; color: #5CFF8A; font-family: var(--f-ui); font-weight: 800; font-size: 14px; letter-spacing: .14em; box-shadow: 0 0 14px rgba(92,255,138,.25); }
+.modbtn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.modpanel { position: fixed; z-index: 19; left: max(12px, env(safe-area-inset-left, 0px)); bottom: max(112px, calc(env(safe-area-inset-bottom, 0px) + 108px)); width: min(410px, calc(100vw - 24px)); max-height: min(72vh, calc(100vh - 140px)); display: grid; grid-template-rows: auto minmax(0, 1fr); background: #07120B; border: 1.5px solid #5CFF8A; border-radius: 8px; box-shadow: 0 14px 40px rgba(0,0,0,.65), 0 0 24px rgba(92,255,138,.18); overflow: hidden; }
+.modhead { color: #5CFF8A; }
+.modbody { overflow-y: auto; padding: 12px 14px 16px; display: grid; gap: 16px; align-content: start; }
+.modsec { display: grid; gap: 8px; }
+.modsec h3 { margin: 0; font-family: var(--f-ui); font-weight: 800; font-size: 14px; letter-spacing: .12em; text-transform: uppercase; color: #5CFF8A; }
+.modsec .note { margin: 0; font-size: 14px; }
+.modcard { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; align-items: start; }
+.modstats { display: grid; gap: 3px; font-size: 14px; }
+.modstat { display: grid; grid-template-columns: minmax(0, 1fr) 24px 24px 38px; gap: 6px; align-items: center; padding: 2px 6px; border-radius: 3px; color: var(--chalk-dim); }
+.modstat b { text-align: right; color: var(--chalk); font-family: var(--f-ui); }
+.modstat i { font-style: normal; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; text-align: right; }
+.modstat.win i { color: #5CFF8A; } .modstat.lose i { color: #ff8a7a; }
+.modstat.best { background: rgba(92,255,138,.14); color: var(--chalk); }
+.modstat.head { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
+.modgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.modeggs { grid-template-columns: repeat(3, 1fr); }
+.modrow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--felt-line); }
+.modinfo { display: grid; gap: 1px; min-width: 0; }
+.modinfo b { font-family: var(--f-ui); font-weight: 700; font-size: 16px; letter-spacing: .03em; }
+.modinfo span { color: var(--chalk-dim); font-size: 13px; }
+.slot.xray { outline: 2px dashed #5CFF8A; outline-offset: 4px; border-radius: 6px; }
+@media (max-width: 520px) { .modpanel { left: 8px; right: 8px; width: auto; } }
+.rulereq { position: fixed; z-index: 22; top: max(14px, env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); width: min(420px, calc(100vw - 24px)); display: grid; gap: 10px; padding: 14px 16px; background: var(--felt-deep); border: 2px solid var(--brass); border-radius: 8px; box-shadow: 0 14px 40px rgba(0,0,0,.65); text-align: center; }
+.rulereq p { margin: 0; font-size: 17px; }
+.rulereq .rr { color: var(--brass); }
+.rulereq .row { display: flex; gap: 10px; justify-content: center; }
 .lobby { align-items: start; }
 @media (min-width: 781px) { .lobby .hero { position: sticky; top: 24px; align-self: start; } }
 @media (min-width: 781px) and (max-height: 740px) { .lobby .hero .fan { display: none; } }
@@ -2755,6 +2783,7 @@ function newDeal(base) {
   s.status = 'playing';
   s.hands = { A: ids.slice(0, per), B: ids.slice(per, per * 2) };
   s.pot = [];
+  s.prop = null; s.propRes = null;
   s.chooser = randInt(2) ? 'A' : 'B';
   s.phase = 'choose';
   s.round = 1;
@@ -3468,6 +3497,184 @@ function predictPanel(s) {
   return h('div', { class: 'panel predict' }, h('div', { class: 'predhead' }, h('span', { class: 'lab', text: head }), h('span', { class: 'chip series', text: 'Your score ' + myScore })), body, board ? h('div', { class: 'lab', text: 'Crowd leaderboard' }) : null, board);
 }
 
+/* ---------- secret mod menu: appears in a game when the player's name is JD or Jacob ---------- */
+const modName = () => /^(jd|jacob)$/i.test(String(ui.name || '').trim());
+const modOn = () => !!(G && G.status === 'playing' && !ui.watch && side && modName());
+ui.mod = { open: false, xray: false, told: false };
+const modXray = () => modOn() && ui.mod.xray;
+const modTotal = id => CARDS[id].v.reduce((a, b) => a + b, 0);
+const modVals = id => CARDS[id].v.join(' · ');
+
+/* the stat where my top card does best against theirs (winning stats first, then the narrowest loss) */
+function modBest(g, me) {
+  const mc = CARDS[g.hands[me][0]], oc = CARDS[g.hands[other(me)][0]];
+  let best = { stat: 0, score: -99, win: false };
+  STATS.forEach((_, i) => {
+    const mv = mc.v[i], ov = oc.v[i], win = mv !== ov && beats(g.rule, mv, ov);
+    const score = (g.rule === 'low' ? ov - mv : mv - ov);
+    if (score > best.score) best = { stat: i, score, win };
+  });
+  return best;
+}
+/* every edit goes through here: stamp it, close the game if a hand ran dry, then publish like any other move */
+function modApply(fn) {
+  if (!modOn()) return;
+  const s = clone(G), me = side;
+  fn(s, me, other(me));
+  s.t = Math.max(Date.now(), (G.t || 0) + 1);
+  if (s.status === 'playing' && s.phase === 'choose' && (!s.hands.A.length || !s.hands.B.length)) {
+    s.status = 'over'; s.winner = s.hands.A.length ? 'A' : 'B'; s.reason = 'cards'; s.series[s.winner] += 1;
+  }
+  ui.sel = null; write(s);
+}
+const modCanEdit = () => modOn() && G.phase === 'choose';
+function modSteal(id) { if (!modCanEdit()) return; modApply((s, me) => { s.hands.A = s.hands.A.filter(x => x !== id); s.hands.B = s.hands.B.filter(x => x !== id); s.pot = s.pot.filter(x => x !== id); s.hands[me].unshift(id); }); toast('Card taken'); }
+function modStealTop() { if (modCanEdit()) modSteal(G.hands[other(side)][0]); }
+function modTakePot() { if (!modCanEdit() || !G.pot.length) return; modApply((s, me) => { s.hands[me].unshift(...s.pot); s.pot = []; }); toast('Pot taken'); }
+function modBestOnTop() { if (!modCanEdit()) return; modApply((s, me) => { const h = s.hands[me]; let k = 0; h.forEach((id, i) => { if (modTotal(id) > modTotal(h[k])) k = i; }); const [c] = h.splice(k, 1); h.unshift(c); }); toast('Best card on top'); }
+function modPlayBest() { if (!modOn() || G.phase !== 'choose' || G.chooser !== side) return; const b = modBest(G, side); ui.sel = null; write(applyPick(G, b.stat)); }
+function modWinRound() {
+  if (!modOn()) return;
+  if (G.phase === 'choose' && G.chooser === side) { const b = modBest(G, side); const s = applyPick(G, b.stat); s.pick.res = side; s.pick.rigged = true; ui.sel = null; write(s); }
+  else if (G.phase === 'reveal' && G.pick && G.pick.res !== side) { const s = clone(G); s.pick.res = side; s.pick.rigged = true; s.t = Math.max(Date.now(), (G.t || 0) + 1); write(s); }
+}
+function modForceRule() { modApply(s => { s.rule = s.rule === 'low' ? 'high' : 'low'; s.prop = null; s.propRes = null; }); }
+function modInstantWin() {
+  if (!modOn()) return;
+  modApply((s, me, op) => { const all = [...s.hands[me], ...s.hands[op], ...s.pot]; s.hands[me] = all; s.hands[op] = []; s.pot = []; s.pick = null; s.phase = 'choose'; });
+}
+
+function modRow(id, where, canTake) {
+  return h('div', { class: 'modrow' },
+    h('div', { class: 'modinfo' }, h('b', { text: CARDS[id].n }), h('span', { text: where + ' · ' + modVals(id) })),
+    h('button', { class: 'btn small ghost', type: 'button', disabled: canTake ? null : true, onclick: () => modSteal(id), text: 'Take' }));
+}
+function modPanel() {
+  const s = G, me = side, op = other(me), reveal = s.phase === 'reveal', can = modCanEdit();
+  const mine = s.hands[me], theirs = s.hands[op];
+  const myTop = CARDS[mine[0]], opTop = CARDS[theirs[0]];
+  const best = modBest(s, me), myPick = s.phase === 'choose' && s.chooser === me;
+  const rows = STATS.map((l, i) => {
+    const mv = myTop.v[i], ov = opTop.v[i], res = mv === ov ? '=' : (beats(s.rule, mv, ov) ? 'win' : 'lose');
+    return h('div', { class: 'modstat ' + res + (i === best.stat ? ' best' : '') }, h('span', { text: l }), h('b', { text: String(mv) }), h('b', { text: String(ov) }), h('i', { text: res === '=' ? 'draw' : res }));
+  });
+  const undealt = CARDS.map((_, i) => i).filter(i => !s.hands.A.includes(i) && !s.hands.B.includes(i) && !s.pot.includes(i));
+  const eggBtns = EGG_RULES.map(r => h('button', { class: 'btn small ghost', type: 'button', onclick: () => showEgg(r.kind, { force: true }), text: r.kind === 'hood' ? 'Hood' : r.kind === 'watch' ? 'Watch' : r.kind === 'pistol' ? 'Pistol' : r.kind === 'bmw' ? 'Donuts' : 'Bullseye' }));
+  return [
+    h('div', { class: 'chathead modhead' }, h('span', { text: 'Mod menu' }), h('button', { class: 'chatx', type: 'button', 'aria-label': 'Close', onclick: () => { ui.mod.open = false; modSync(); }, text: '×' })),
+    h('div', { class: 'modbody' },
+      h('div', { class: 'modsec' },
+        h('button', { class: 'btn small' + (ui.mod.xray ? '' : ' ghost'), type: 'button', 'aria-pressed': ui.mod.xray ? 'true' : 'false', onclick: () => { ui.mod.xray = !ui.mod.xray; render(); }, text: 'X-ray on the table: ' + (ui.mod.xray ? 'on' : 'off') })),
+      h('div', { class: 'modsec' },
+        h('h3', { text: s.players[op].name + '’s card in play' }),
+        h('div', { class: 'modcard' }, slot(cardEl(opTop, reveal ? { hi: s.pick.stat } : {}), 0.5),
+          h('div', { class: 'modstats' }, h('div', { class: 'modstat head' }, h('span', { text: 'Stat' }), h('b', { text: 'You' }), h('b', { text: 'Them' }), h('i', { text: '' })), rows)),
+        h('p', { class: 'note', text: 'Best stat to play: ' + STATS[best.stat] + (best.win ? ' (wins)' : ' (no winning stat)') })),
+      h('div', { class: 'modsec' },
+        h('h3', { text: 'Actions' }),
+        h('div', { class: 'modgrid' },
+          h('button', { class: 'btn small', type: 'button', disabled: myPick ? null : true, onclick: modPlayBest, text: 'Play best stat' }),
+          h('button', { class: 'btn small', type: 'button', disabled: (myPick || (reveal && s.pick.res !== me)) ? null : true, onclick: modWinRound, text: 'Win this round' }),
+          h('button', { class: 'btn small', type: 'button', disabled: can ? null : true, onclick: modStealTop, text: 'Steal their top card' }),
+          h('button', { class: 'btn small', type: 'button', disabled: can && s.pot.length ? null : true, onclick: modTakePot, text: 'Take the pot' + (s.pot.length ? ' (' + s.pot.length + ')' : '') }),
+          h('button', { class: 'btn small', type: 'button', disabled: can ? null : true, onclick: modBestOnTop, text: 'Best card on top' }),
+          h('button', { class: 'btn small', type: 'button', onclick: modForceRule, text: 'Force ' + ruleLabel(s.rule === 'low' ? 'high' : 'low') }),
+          h('button', { class: 'btn small danger', type: 'button', onclick: modInstantWin, text: 'Instant victory' })),
+        can ? null : h('p', { class: 'note', text: 'Card moves wait for the next pick.' })),
+      h('div', { class: 'modsec' }, h('h3', { text: 'Pixel art' }), h('div', { class: 'modgrid modeggs' }, eggBtns)),
+      h('div', { class: 'modsec' },
+        h('h3', { text: 'Their hand (' + theirs.length + ')' }),
+        theirs.map((id, k) => modRow(id, k === 0 ? 'Top card' : '#' + (k + 1), can))),
+      s.pot.length ? h('div', { class: 'modsec' }, h('h3', { text: 'The pot (' + s.pot.length + ')' }), s.pot.map(id => modRow(id, 'Pot', can))) : null,
+      undealt.length ? h('div', { class: 'modsec' }, h('h3', { text: 'Not dealt (' + undealt.length + ')' }), undealt.map(id => modRow(id, 'Spare', can))) : null)
+  ];
+}
+function modSync() {
+  const on = modOn();
+  let btn = document.getElementById('modbtn'), panel = document.getElementById('modpanel');
+  if (!on) { if (btn) btn.hidden = true; if (panel) panel.hidden = true; return; }
+  if (!btn) {
+    btn = h('button', { id: 'modbtn', class: 'modbtn', type: 'button', 'aria-label': 'Mod menu', onclick: () => { ui.mod.open = !ui.mod.open; modSync(); }, text: 'MOD' });
+    panel = h('div', { id: 'modpanel', class: 'modpanel', role: 'dialog', 'aria-label': 'Mod menu', hidden: true });
+    document.body.append(btn, panel);
+  }
+  btn.hidden = false; panel.hidden = !ui.mod.open;
+  if (!ui.mod.told) { ui.mod.told = true; setTimeout(() => toast('Mod menu unlocked'), 400); }
+  if (!ui.mod.open) return;
+  const keep = panel.querySelector('.modbody'), top = keep ? keep.scrollTop : 0;
+  panel.replaceChildren(...modPanel());
+  const nb = panel.querySelector('.modbody'); if (nb) nb.scrollTop = top;
+}
+
+/* ---------- switching highest/lowest wins mid-game: ask, and the other player has to agree ---------- */
+const ruleLabel = r => (r === 'low' ? 'Lowest wins' : 'Highest wins');
+const stampState = (g, s) => { s.t = Math.max(Date.now(), (g.t || 0) + 1); return s; };
+function proposeSwitch() {
+  if (!G || G.status !== 'playing' || G.phase !== 'choose' || G.prop || ui.watch || !side) return;
+  const s = stampState(G, clone(G));
+  s.prop = { id: Date.now(), from: side, rule: G.rule === 'low' ? 'high' : 'low' }; s.propRes = null;
+  write(s);
+  if (ui.solo) { const id = s.prop.id; setTimeout(() => aiRuleReply(id), 1300 + Math.random() * 800); }
+}
+function cancelSwitch() {
+  if (!G || !G.prop || G.prop.from !== side) return;
+  const s = stampState(G, clone(G)); s.prop = null; write(s);
+}
+function answerSwitch(ok, who) {
+  who = who || side;
+  if (!G || G.status !== 'playing' || !G.prop || G.prop.from === who) return;
+  const pr = G.prop, s = stampState(G, clone(G));
+  s.prop = null; s.propRes = { id: pr.id, from: pr.from, rule: pr.rule, ok: !!ok };
+  if (ok) s.rule = pr.rule;
+  write(s);
+}
+/* the computer decides in character */
+function aiRuleReply(id) {
+  if (!ui.solo || !G || G.status !== 'playing' || !G.prop || G.prop.id !== id) return;
+  const d = ui.diff, behind = G.hands.B.length < G.hands.A.length;
+  const ok = d === 'easy' ? true : d === 'normal' ? Math.random() < 0.5 : behind;
+  const say = {
+    easy: ok ? 'Fine by me. I never understood the first rule anyway.' : '',
+    normal: ok ? 'Rule change noted. Motion granted.' : 'Motion denied. Rules are rules.',
+    sneaky: ok ? 'A wise proposal. The chair finds in favour.' : 'The chair rules that motion out of order.'
+  }[d];
+  if (say) aiSay(say);
+  answerSwitch(ok, 'B');
+}
+function switchBtn() {
+  if (ui.watch || !G || G.status !== 'playing' || !side) return null;
+  const opName = G.players[other(side)].name, lab = ruleLabel(G.rule === 'low' ? 'high' : 'low');
+  if (G.prop && G.prop.from === side) return [h('span', { class: 'note', text: 'Waiting for ' + opName + ' to agree to ' + lab + '…' }), h('button', { class: 'btn small ghost', type: 'button', onclick: cancelSwitch, text: 'Cancel' })];
+  if (G.prop) return null;
+  return h('button', { class: 'btn small ghost', type: 'button', disabled: G.phase === 'choose' ? null : true, title: G.phase === 'choose' ? '' : 'You can ask before a stat is played', onclick: proposeSwitch, text: 'Ask: ' + lab + '?' });
+}
+function switchSync() {
+  let el = document.getElementById('rulereq');
+  const on = !!(G && G.status === 'playing' && G.prop && side && G.prop.from !== side && !ui.watch);
+  if (!on) { if (el) el.hidden = true; return; }
+  if (!el) { el = h('div', { id: 'rulereq', class: 'rulereq', role: 'alertdialog', 'aria-label': 'Rule change request' }); document.body.append(el); }
+  const who = G.players[G.prop.from].name, key = G.prop.id;
+  if (el.dataset.k !== String(key) || el.hidden) {
+    el.dataset.k = String(key);
+    el.replaceChildren(
+      h('p', null, h('b', { text: who }), ' wants to switch to ', h('b', { class: 'rr', text: ruleLabel(G.prop.rule) }), '. Do you agree?'),
+      h('div', { class: 'row' },
+        h('button', { class: 'btn small', type: 'button', onclick: () => answerSwitch(true), text: 'Agree' }),
+        h('button', { class: 'btn small ghost', type: 'button', onclick: () => answerSwitch(false), text: 'No thanks' })));
+  }
+  el.hidden = false;
+}
+/* tell everyone when the rule changes, and tell the asker when they were turned down */
+function ruleWatch() {
+  if (!G) { ui.ruleSeen = null; return; }
+  const r = ui.ruleSeen;
+  ui.ruleSeen = { games: G.games, rule: G.rule, prop: G.prop ? G.prop.id : 0, res: G.propRes ? G.propRes.id : 0 };
+  if (!r || r.games !== G.games || G.status !== 'playing') return;
+  if (r.rule !== G.rule) { sfx('coin'); toast('Rule changed: ' + ruleLabel(G.rule) + ' from now on'); }
+  else if (G.propRes && G.propRes.id !== r.res && !G.propRes.ok && G.propRes.from === side && !ui.watch) { sfx('buzz'); toast(G.players[other(side)].name + ' said no'); }
+  else if (G.prop && G.prop.id !== r.prop && G.prop.from !== side && !ui.watch) sfx('chat');
+}
+
 /* ---------- chat (two-player games and against the computer; lives outside the table so typing is never interrupted) ---------- */
 const chat = { open: false, msgs: [], unread: 0, built: false };
 function chatBuild() {
@@ -3629,8 +3836,8 @@ function table() {
   const mySlot = slot(cardEl(myCard, { hi, onRow: isChooser ? i => { ui.sel = i; render(); } : null }), m.s, myCls);
   const seats = [h('div', { class: 'seat' }, h('div', { class: 'tag', text: 'You' }), mySlot)];
   if (m.two) {
-    const opNode = reveal ? slot(cardEl(opCard, { hi }), m.s, opCls + (fresh ? ' flipin' : '')) : slot(backEl(), m.s);
-    seats.push(h('div', { class: 'seat' }, h('div', { class: 'tag', text: opName }), opNode));
+    const opNode = reveal ? slot(cardEl(opCard, { hi }), m.s, opCls + (fresh ? ' flipin' : '')) : (modXray() ? slot(cardEl(opCard, {}), m.s, 'xray') : slot(backEl(), m.s));
+    seats.push(h('div', { class: 'seat' }, h('div', { class: 'tag', text: opName + (!reveal && modXray() ? ' · x-ray' : '') }), opNode));
   }
   let actions;
   if (isChooser) {
@@ -3647,7 +3854,7 @@ function table() {
   const series = seriesChip(s, me);
   const foot = ui.confirmResign
     ? h('div', { class: 'foot' }, h('span', { class: 'note', text: (isMatch(s) ? 'Forfeit the match to ' : 'Give the game to ') + opName + '?' }), h('button', { class: 'btn small danger', type: 'button', onclick: resign, text: 'Yes, resign' }), h('button', { class: 'btn small ghost', type: 'button', onclick: () => { ui.confirmResign = false; render(); }, text: 'Keep playing' }))
-    : h('div', { class: 'foot' }, codeBox(), handBtn(), watchBtn(), talkBtn(), h('button', { class: 'btn small ghost', type: 'button', onclick: () => { ui.confirmResign = true; render(); }, text: 'Resign' }));
+    : h('div', { class: 'foot' }, codeBox(), handBtn(), switchBtn(), watchBtn(), talkBtn(), h('button', { class: 'btn small ghost', type: 'button', onclick: () => { ui.confirmResign = true; render(); }, text: 'Resign' }));
   return h('div', null,
     topbar([series, codeChip(), modeChip(), rulesChip(), specChip(), h('span', { class: 'chip', text: ui.solo ? 'Vs computer' : 'Connected' })]),
     banner(s, meName, opName),
@@ -4203,7 +4410,7 @@ function render() {
   if (hv) app.replaceChildren(view, hv); else app.replaceChildren(view);
   document.querySelectorAll('body > .toast').forEach(el => el.remove());
   if (ui.toast) document.body.append(h('div', { class: 'toast', role: 'status', text: ui.toast }));
-  chatSync(); eggCheck(); devSync(); sfxCheck(); aiWatch(); sndSync();
+  chatSync(); eggCheck(); devSync(); modSync(); switchSync(); ruleWatch(); sfxCheck(); aiWatch(); sndSync();
   if (keep) { const el = document.getElementById(keep.id); if (el) { el.focus(); try { el.setSelectionRange(keep.s, keep.e); } catch (e) {} } }
 }
 
