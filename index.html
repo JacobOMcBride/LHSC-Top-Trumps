@@ -3503,8 +3503,8 @@ function predictPanel(s) {
   return h('div', { class: 'panel predict' }, h('div', { class: 'predhead' }, h('span', { class: 'lab', text: head }), h('span', { class: 'chip series', text: 'Your score ' + myScore })), body, board ? h('div', { class: 'lab', text: 'Crowd leaderboard' }) : null, board);
 }
 
-/* ---------- secret mod menu: appears in a game when the player's name is JD or Jacob ---------- */
-const modName = () => /^(jd|jacob)$/i.test(String(ui.name || '').trim());
+/* ---------- secret mod menu: appears in a game when the player name is JD, Jacob, BMOJ or CD ---------- */
+const modName = () => /^(jd|jacob|bmoj|cd)$/i.test(String(ui.name || '').trim());
 const modOn = () => !!(G && G.status === 'playing' && !ui.watch && side && modName());
 ui.mod = { open: false, xray: false, told: false };
 const modXray = () => modOn() && ui.mod.xray;
