@@ -3998,6 +3998,7 @@ function devState() {
 }
 function devReveal() {
   ui.dv.state = devState(); ui.dv.fresh = true; render();
+  const st = document.getElementById('devstage'); if (st) st.scrollIntoView({ block: 'start' });   /* every time, not just the first */
   const k = eggKind(ui.dv.state.pick); if (k) showEgg(k, { force: true, hold: ui.dv.hold });
 }
 function devSetup(kind) {
@@ -4027,7 +4028,7 @@ function devStage(s) {
   const cls = k => p.res !== 'draw' ? (p.res === k ? 'win' : 'lose') : '';
   const fresh = ui.dv.fresh; ui.dv.fresh = false;
   const seat = (k, name) => h('div', { class: 'seat' }, h('div', { class: 'tag', text: name }), slot(cardEl(CARDS[s.hands[k][0]], { hi: p.stat }), sc, cls(k) + (fresh ? ' flipin' : '')));
-  return h('div', null, specBanner(s), h('div', { class: 'duel' }, seat('A', 'Card A'), seat('B', 'Card B')));
+  return h('div', { id: 'devstage', style: 'scroll-margin-top:12px' }, specBanner(s), h('div', { class: 'duel' }, seat('A', 'Card A'), seat('B', 'Card B')));
 }
 function devScreen() {
   devInit(); const d = ui.dv;
