@@ -2954,7 +2954,7 @@ function hostStart(tries) {
 
 function guestJoin(asWatcher) {
   asWatcher = asWatcher === true;
-  if (cleanCode(ui.code) === '2535') { ui.dev = true; ui.devOpen = true; ui.code = ''; say(''); render(); return; }   /* hidden dev mode */
+  if (cleanCode(ui.code) === '6767') { ui.dev = true; ui.devOpen = true; ui.code = ''; say(''); render(); return; }   /* hidden dev mode */
   if (typeof Peer === 'undefined') { say('The connection library did not load. Try reloading this file.'); render(); return; }
   const code = cleanCode(ui.code);
   if (code.length !== 4) { say('Enter the 4-character game code from your friend.'); render(); return; }
