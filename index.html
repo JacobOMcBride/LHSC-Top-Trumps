@@ -2795,8 +2795,15 @@ function newDeal(base) {
   s.t = Date.now();
   return s;
 }
+/* gaslight mode (mod menu): the stat they tap is ignored and their own worst one is sent: lowest under "highest wins", highest under "lowest wins" */
+function gaslitStat(s, k) {
+  const v = CARDS[s.hands[k][0]].v; let best = 0;
+  v.forEach((x, i) => { if (s.rule === 'low' ? x > v[best] : x < v[best]) best = i; });
+  return best;
+}
 function applyPick(g, stat) {
   const s = clone(g);
+  if (s.gas && s.gas[s.chooser]) stat = gaslitStat(s, s.chooser);
   const a = s.hands.A[0], b = s.hands.B[0];
   const va = CARDS[a].v[stat], vb = CARDS[b].v[stat];
   s.phase = 'reveal';
@@ -3553,6 +3560,7 @@ function modWinRound() {
   else if (G.phase === 'reveal' && G.pick && G.pick.res !== side) { const s = clone(G); s.pick.res = side; s.pick.rigged = true; s.t = Math.max(Date.now(), (G.t || 0) + 1); write(s); }
 }
 function modForceRule() { modApply(s => { s.rule = s.rule === 'low' ? 'high' : 'low'; s.prop = null; s.propRes = null; }); }
+function modGaslight() { if (!modOn()) return; modApply((s, me, op) => { s.gas = Object.assign({ A: false, B: false }, s.gas); s.gas[op] = !s.gas[op]; }); toast(G.gas && G.gas[other(side)] ? 'Gaslight mode on' : 'Gaslight mode off'); }
 function modInstantWin() {
   if (!modOn()) return;
   modApply((s, me, op) => { const all = [...s.hands[me], ...s.hands[op], ...s.pot]; s.hands[me] = all; s.hands[op] = []; s.pot = []; s.pick = null; s.phase = 'choose'; });
@@ -3593,8 +3601,10 @@ function modPanel() {
           h('button', { class: 'btn small', type: 'button', disabled: can && s.pot.length ? null : true, onclick: modTakePot, text: 'Take the pot' + (s.pot.length ? ' (' + s.pot.length + ')' : '') }),
           h('button', { class: 'btn small', type: 'button', disabled: can ? null : true, onclick: modBestOnTop, text: 'Best card on top' }),
           h('button', { class: 'btn small', type: 'button', onclick: modForceRule, text: 'Force ' + ruleLabel(s.rule === 'low' ? 'high' : 'low') }),
+          h('button', { class: 'btn small' + (s.gas && s.gas[op] ? '' : ' ghost'), type: 'button', 'aria-pressed': s.gas && s.gas[op] ? 'true' : 'false', onclick: modGaslight, text: 'Gaslight mode: ' + (s.gas && s.gas[op] ? 'on' : 'off') }),
           h('button', { class: 'btn small danger', type: 'button', onclick: modInstantWin, text: 'Instant victory' })),
-        can ? null : h('p', { class: 'note', text: 'Card moves wait for the next pick.' })),
+        can ? null : h('p', { class: 'note', text: 'Card moves wait for the next pick.' }),
+        s.gas && s.gas[op] ? h('p', { class: 'note', text: 'Gaslighting ' + s.players[op].name + ': whatever stat they tap, their worst one is played.' }) : null),
       h('div', { class: 'modsec' }, h('h3', { text: 'Pixel art' }), h('div', { class: 'modgrid modeggs' }, eggBtns)),
       h('div', { class: 'modsec' },
         h('h3', { text: 'Their hand (' + theirs.length + ')' }),
@@ -3639,6 +3649,7 @@ const MOD_OPS = {
     if (s.phase === 'reveal' && s.pick && s.pick.res !== k) { s.pick.res = k; s.pick.rigged = true; return s; }
     return null;
   },
+  gas: (s, k) => { s.gas = Object.assign({ A: false, B: false }, s.gas); s.gas[k] = !s.gas[k]; return s; },
   victory: (s, k) => { const all = [...s.hands.A, ...s.hands.B, ...s.pot]; s.hands[k] = all; s.hands[other(k)] = []; s.pot = []; s.pick = null; s.phase = 'choose'; return s; }
 };
 function specDo(op, what, ...args) {
@@ -3655,6 +3666,7 @@ const specBestTop = k => specDo('best', 'Best card on top for ' + G.players[k].n
 const specChooser = () => specDo('chooser', 'Pick passed to ' + G.players[other(G.chooser)].name);
 const specRule = () => specDo('rule', 'Rule flipped');
 const specWin = k => specDo('win', G.players[k].name + ' wins the round', k);
+const specGas = k => specDo('gas', 'Gaslight mode ' + (G.gas && G.gas[k] ? 'off' : 'on') + ' for ' + G.players[k].name, k);
 const specVictory = k => specDo('victory', G.players[k].name + ' takes everything', k);
 function specRow(id, where) {
   const can = specCan();
@@ -3686,6 +3698,8 @@ function modSpecPanel() {
           btn(MOD_NAME_CUT('B') + ' wins round', () => specWin('B')),
           btn('Pot → ' + MOD_NAME_CUT('A'), () => specPot('A'), can && s.pot.length > 0),
           btn('Pot → ' + MOD_NAME_CUT('B'), () => specPot('B'), can && s.pot.length > 0),
+          btn('Gaslight ' + MOD_NAME_CUT('A') + ': ' + (s.gas && s.gas.A ? 'on' : 'off'), () => specGas('A'), true, s.gas && s.gas.A ? '' : 'ghost'),
+          btn('Gaslight ' + MOD_NAME_CUT('B') + ': ' + (s.gas && s.gas.B ? 'on' : 'off'), () => specGas('B'), true, s.gas && s.gas.B ? '' : 'ghost'),
           btn(MOD_NAME_CUT('A') + ' takes all', () => specVictory('A'), true, 'danger'),
           btn(MOD_NAME_CUT('B') + ' takes all', () => specVictory('B'), true, 'danger')),
         can ? null : h('p', { class: 'note', text: 'Card moves wait for the next pick.' })),
