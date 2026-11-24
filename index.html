@@ -326,10 +326,10 @@ input.codein:focus-visible { outline: 2px solid var(--brass); outline-offset: 1p
 .sndbtn { position: fixed; left: max(14px, env(safe-area-inset-left, 0px)); bottom: max(14px, env(safe-area-inset-bottom, 0px)); z-index: 14; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; cursor: pointer; background: var(--felt-deep); color: var(--brass); border: 1.5px solid var(--felt-line); box-shadow: 0 4px 14px rgba(0,0,0,.4); padding: 0; }
 .sndbtn[aria-pressed="false"] { color: var(--chalk-dim); }
 .sndbtn:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
-.bubble { position: fixed; z-index: 17; top: max(72px, calc(env(safe-area-inset-top, 0px) + 60px)); left: 50%; transform: translateX(-50%); max-width: min(420px, calc(100vw - 28px)); display: grid; gap: 2px; padding: 10px 16px; border-radius: 12px; background: var(--chalk); color: var(--ink); box-shadow: 0 10px 30px rgba(0,0,0,.5); font-family: var(--f-type); font-size: 15px; line-height: 1.3; text-align: left; }
-.bubble b { font-family: var(--f-ui); font-weight: 800; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--brick); }
-.bubble.in { animation: bubblein .35s cubic-bezier(.2,.9,.3,1.2); }
-@keyframes bubblein { from { opacity: 0; transform: translate(-50%, -14px) scale(.92); } to { opacity: 1; transform: translateX(-50%); } }
+.bubble { position: fixed; z-index: 13; left: max(14px, env(safe-area-inset-left, 0px)); bottom: max(68px, calc(env(safe-area-inset-bottom, 0px) + 60px)); max-width: min(270px, calc(100vw - 100px)); display: grid; gap: 1px; padding: 7px 11px; border-radius: 10px 10px 10px 2px; background: rgba(238,229,206,.94); color: var(--ink); box-shadow: 0 6px 18px rgba(0,0,0,.45); font-family: var(--f-type); font-size: 12.5px; line-height: 1.3; text-align: left; pointer-events: none; }
+.bubble b { font-family: var(--f-ui); font-weight: 800; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--brick); }
+.bubble.in { animation: bubblein .3s cubic-bezier(.2,.9,.3,1.2); }
+@keyframes bubblein { from { opacity: 0; transform: translateY(10px) scale(.95); } to { opacity: 1; transform: none; } }
 .reacts { position: fixed; inset: 0; z-index: 18; pointer-events: none; overflow: hidden; }
 .react { position: absolute; bottom: 18%; display: grid; justify-items: center; gap: 2px; animation: reactfloat 2.5s ease-out forwards; }
 .react .em { font-size: 44px; line-height: 1; filter: drop-shadow(0 4px 8px rgba(0,0,0,.45)); }
@@ -3106,9 +3106,11 @@ function chatFromPlayerLink(m) {
 }
 /* ---------- game options (remembered on this device) ---------- */
 const pref = (k, ok, d) => { const v = sget('lhsc.tt.' + k); return ok.includes(v) ? v : d; };
-Object.assign(ui, { rule: pref('rule', ['high', 'low'], 'high'), size: pref('size', ['full', 'quick'], 'full'), format: pref('format', ['single', 'bo3', 'bo5'], 'single'), diff: pref('diff', ['easy', 'normal', 'sneaky'], 'normal'), opts: false });
+Object.assign(ui, { rule: pref('rule', ['high', 'low'], 'high'), size: pref('size', ['full', 'quick'], 'full'), format: pref('format', ['single', 'bo3', 'bo5'], 'single'), diff: pref('diff', ['easy', 'normal', 'sneaky'], 'normal'), aiTalk: sget('lhsc.tt.aitalk') !== '0', opts: false });
 function setOpt(k, v) { ui[k] = v; sset('lhsc.tt.' + k, v); render(); }
 const gameOpts = () => ({ mode: ui.mode, rule: ui.rule, size: ui.size, format: ui.format });
+function setTalk(on) { ui.aiTalk = !!on; sset('lhsc.tt.aitalk', ui.aiTalk ? '1' : '0'); if (!ui.aiTalk) { const b = document.getElementById('bubble'); if (b) b.hidden = true; } render(); }
+function talkBtn() { return ui.solo ? h('button', { class: 'btn small ghost', type: 'button', 'aria-pressed': ui.aiTalk ? 'true' : 'false', onclick: () => setTalk(!ui.aiTalk), text: ui.aiTalk ? 'Opponent comments: on' : 'Opponent comments: off' }) : null; }
 function setMode(m) { setOpt('mode', m === 'alternate' ? 'alternate' : 'winner'); }
 
 /* ---------- play the computer: three opponents ---------- */
@@ -3126,6 +3128,7 @@ const PERSONAS = {
     greet: ['Range is hot. Pick your stat.', 'Rules are simple. Highest card wins. Mostly.'],
     win: ['Muzzles down, please. That one is mine.', 'Cease fire. I will take those.', 'Point taken. Literally.', 'Within tolerance. Barely.'],
     lose: ['Noted for the incident log.', 'Lucky. Not safe, but lucky.', 'That was within tolerance.', 'I will allow it.'],
+    cheyl: ['Careful with Cheylesmore. We do not want to trigger a federal investigation.', 'Cheylesmore on the table. Nobody mention a federal investigation.', 'Ah, Cheylesmore. Do be careful not to trigger a federal investigation.'],
     gwin: ['Range is clear. Good game.'], glose: ['Paperwork is on me. Well played.'],
     reply: ['Please keep chat to the safe side of the firing point.', 'Copy that.', 'Is that a formal complaint?', 'Noted. Eyes on your card.']
   },
@@ -3199,7 +3202,7 @@ function aiTick() {
 const aiNote = { key: '', last: -9 };
 let bubbleTimer = 0;
 function aiSay(text, quiet) {
-  if (!ui.solo || !G) return;
+  if (!ui.solo || !G || !ui.aiTalk) return;
   const name = G.players.B.name;
   chatAdd({ me: false, name, spec: false, text }, true);
   if (quiet) return;
@@ -3207,11 +3210,11 @@ function aiSay(text, quiet) {
   if (!b) { b = h('div', { id: 'bubble', class: 'bubble', role: 'status' }, h('b', { id: 'bubblewho' }), h('span', { id: 'bubbletxt' })); document.body.append(b); }
   document.getElementById('bubblewho').textContent = name; document.getElementById('bubbletxt').textContent = text;
   b.hidden = false; b.classList.remove('in'); void b.offsetWidth; b.classList.add('in');
-  clearTimeout(bubbleTimer); bubbleTimer = setTimeout(() => { b.hidden = true; }, 5200);
+  clearTimeout(bubbleTimer); bubbleTimer = setTimeout(() => { b.hidden = true; }, 4500);
 }
 function aiWatch() {
   const b = document.getElementById('bubble');
-  if (!ui.solo || !G) { if (b) b.hidden = true; aiNote.key = ''; return; }
+  if (!ui.solo || !G || !ui.aiTalk) { if (b) b.hidden = true; aiNote.key = ''; return; }
   const P = persona();
   let key = '';
   if (G.status === 'playing' && G.round === 1 && G.phase === 'choose') key = 'g' + G.games;
@@ -3222,6 +3225,11 @@ function aiWatch() {
   const kind = key[0];
   if (kind === 'g') { if (G.games === 1 || randInt(2)) { const g = G.games; setTimeout(() => { if (ui.solo && G && G.games === g) aiSay(pickOf(P.greet)); }, 700); } return; }
   if (kind === 'r') {
+    const CH = cardNo('Cheylesmore (Lord Chelmsford) Range');
+    if (P.cheyl && (G.pick.a === CH || G.pick.b === CH) && (aiNote.cheylGame !== G.games || randInt(100) < 25)) {
+      aiNote.cheylGame = G.games; aiNote.last = G.round; const g = G.games;
+      setTimeout(() => { if (ui.solo && G && G.games === g) aiSay(pickOf(P.cheyl)); }, 750); return;
+    }
     const res = G.pick.res; if (res === 'draw') return;
     const n = G.round - aiNote.last;
     if (n < 3 && randInt(100) < 70) return;                     /* never every round */
@@ -3231,7 +3239,7 @@ function aiWatch() {
   if (G.winner !== 'draw') { const w = G.winner, g = G.games; setTimeout(() => { if (ui.solo && G && G.games === g) aiSay(pickOf(w === 'B' ? P.gwin : P.glose)); }, 600); }
 }
 function aiReplyChat() {
-  if (!ui.solo || !G) return;
+  if (!ui.solo || !G || !ui.aiTalk) return;
   const g = G.games;
   setTimeout(() => { if (ui.solo && G && G.games === g) { const t = pickOf(persona().reply); chatAdd({ me: false, name: G.players.B.name, spec: false, text: t }); } }, 800 + randInt(900));
 }
@@ -3465,7 +3473,7 @@ function chatSend() {
 }
 function chatReset() { chat.msgs = []; chat.unread = 0; chat.open = false; const l = document.getElementById('chatlog'); if (l) l.replaceChildren(); chatSync(); }
 function chatSync() {
-  const on = !!(G && side && (ui.solo || dc));
+  const on = !!(G && side && ((ui.solo && ui.aiTalk) || (!ui.solo && dc)));
   if (!on && !chat.built) return;
   chatBuild();
   const btn = document.getElementById('chatbtn'), panel = document.getElementById('chatpanel'), badge = document.getElementById('chatbadge');
@@ -3597,7 +3605,7 @@ function table() {
   const series = seriesChip(s, me);
   const foot = ui.confirmResign
     ? h('div', { class: 'foot' }, h('span', { class: 'note', text: (isMatch(s) ? 'Forfeit the match to ' : 'Give the game to ') + opName + '?' }), h('button', { class: 'btn small danger', type: 'button', onclick: resign, text: 'Yes, resign' }), h('button', { class: 'btn small ghost', type: 'button', onclick: () => { ui.confirmResign = false; render(); }, text: 'Keep playing' }))
-    : h('div', { class: 'foot' }, watchBtn(), h('button', { class: 'btn small ghost', type: 'button', onclick: () => { ui.confirmResign = true; render(); }, text: 'Resign' }));
+    : h('div', { class: 'foot' }, watchBtn(), talkBtn(), h('button', { class: 'btn small ghost', type: 'button', onclick: () => { ui.confirmResign = true; render(); }, text: 'Resign' }));
   return h('div', null,
     topbar([series, modeChip(), rulesChip(), specChip(), h('span', { class: 'chip', text: ui.solo ? 'Vs computer' : 'Connected' })]),
     banner(s, meName, opName),
@@ -3768,7 +3776,7 @@ function over() {
       scene,
       h('div', { class: 'kick', text: bo ? 'Match over after ' + (mine + theirs) + ' games' : 'Game over after ' + (s.round - 1) + ' rounds' }),
       h('div', { class: 'final cerfinal ' + (won ? 'win' : 'lose'), text: headline }),
-      h('p', { class: 'cerq' }, '“' + q + '” ', h('span', { text: '– Sam, Club Secretary' })),
+      h('p', { class: 'cerq' }, '“' + q + '” ', h('span', { text: '– Sam, Club Chairman' })),
       h('p', { class: 'note', text: sub }),
       nextBtn(bo ? 'New match' : 'Deal again'), leave, errp, history(s, opName)));
 }
@@ -3813,7 +3821,8 @@ function optionsPanel() {
 function diffPick() {
   return h('div', { class: 'field' }, h('span', { class: 'lab', id: 'difflab', text: 'Computer opponent' }),
     h('div', { class: 'segs3', role: 'radiogroup', 'aria-labelledby': 'difflab' },
-      ['easy', 'normal', 'sneaky'].map(k => seg('', 'diff', k, k === 'easy' ? 'Easy' : k === 'normal' ? 'Normal' : 'Sneaky', PERSONAS[k].name))));
+      ['easy', 'normal', 'sneaky'].map(k => seg('', 'diff', k, k === 'easy' ? 'Easy' : k === 'normal' ? 'Normal' : 'Sneaky', PERSONAS[k].name))),
+    h('label', { class: 'devcheck talkchk' }, h('input', { type: 'checkbox', id: 'aitalk', checked: ui.aiTalk ? true : null, onchange: e => setTalk(e.target.checked) }), h('span', { text: 'Let the opponent comment and chat' })));
 }
 
 function lobby() {
