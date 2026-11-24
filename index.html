@@ -285,6 +285,17 @@ input.codein:focus-visible { outline: 2px solid var(--brass); outline-offset: 1p
 .cerprevin { width: min(640px, 100%); }
 .pile .who .nm { max-width: 16ch; }
 .wrap { padding-bottom: 76px; }
+.cardsel { display: grid; gap: 6px; }
+.cardread { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.cardread b { font-family: var(--f-ui); font-weight: 800; font-size: 26px; letter-spacing: .04em; text-transform: uppercase; color: var(--brass); line-height: 1; }
+.cardread span { color: var(--chalk-dim); font-size: 15px; }
+.cardsel input[type=range] { appearance: none; -webkit-appearance: none; width: 100%; min-height: 34px; margin: 0; background: transparent; cursor: pointer; }
+.cardsel input[type=range]::-webkit-slider-runnable-track { height: 6px; border-radius: 3px; background: var(--felt-line); }
+.cardsel input[type=range]::-moz-range-track { height: 6px; border-radius: 3px; background: var(--felt-line); }
+.cardsel input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 26px; height: 26px; margin-top: -10px; border-radius: 50%; background: var(--brass); border: 3px solid var(--felt-deep); box-shadow: 0 0 0 1.5px var(--brass); }
+.cardsel input[type=range]::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: var(--brass); border: 3px solid var(--felt-deep); box-shadow: 0 0 0 1.5px var(--brass); }
+.cardsel input[type=range]:focus-visible { outline: 2px solid var(--chalk); outline-offset: 4px; border-radius: 4px; }
+.cardticks { display: flex; justify-content: space-between; font-size: 13px; color: var(--chalk-dim); letter-spacing: .04em; text-transform: uppercase; }
 .lobby { align-items: start; }
 @media (min-width: 781px) { .lobby .hero { position: sticky; top: 24px; align-self: start; } }
 @media (min-width: 781px) and (max-height: 740px) { .lobby .hero .fan { display: none; } }
@@ -2711,14 +2722,18 @@ const isMatch = s => !!s.format && s.format !== 'single';
 /* a game that ends a match: every single game, or the game where someone reaches the target in a best-of series */
 function isFinal(s) { return s.status === 'over' && (!isMatch(s) || (s.winner !== 'draw' && s.series[s.winner] >= targetWins(s))); }
 const beats = (rule, x, y) => (rule === 'low' ? x < y : x > y);
+/* how many cards are in play: even, 8 (4 each) up to the whole deck */
+const MIN_CARDS = 8;
+function cleanCards(n) { n = parseInt(n, 10); if (!(n > 0)) n = CARDS.length; n = Math.round(n / 2) * 2; return Math.max(MIN_CARDS, Math.min(CARDS.length, n)); }
 function newDeal(base) {
   const s = clone(base);
   s.mode = s.mode === 'alternate' ? 'alternate' : 'winner';
   s.rule = s.rule === 'low' ? 'low' : 'high';
-  s.size = s.size === 'quick' ? 'quick' : 'full';
+  delete s.size;
+  s.cards = cleanCards(s.cards);
   s.format = FORMATS[s.format] ? s.format : 'single';
   const ids = shuffle(CARDS.map((_, i) => i));
-  const per = s.size === 'quick' ? 6 : Math.floor(ids.length / 2);
+  const per = s.cards / 2;
   s.status = 'playing';
   s.hands = { A: ids.slice(0, per), B: ids.slice(per, per * 2) };
   s.pot = [];
@@ -2789,7 +2804,7 @@ function rulesChip() {
   const s = G, parts = [];
   if (!s) return null;
   if (s.rule === 'low') parts.push('Lowest wins');
-  if (s.size === 'quick') parts.push('Quick game');
+  if (s.cards < CARDS.length) parts.push(s.cards + ' cards');
   return parts.length ? h('span', { class: 'chip series', text: parts.join(' · ') }) : null;
 }
 /* ---------- state (browser-to-browser link, matched by a short game code) ---------- */
@@ -3110,9 +3125,9 @@ function chatFromPlayerLink(m) {
 }
 /* ---------- game options (remembered on this device) ---------- */
 const pref = (k, ok, d) => { const v = sget('lhsc.tt.' + k); return ok.includes(v) ? v : d; };
-Object.assign(ui, { rule: pref('rule', ['high', 'low'], 'high'), size: pref('size', ['full', 'quick'], 'full'), format: pref('format', ['single', 'bo3', 'bo5'], 'single'), diff: pref('diff', ['easy', 'normal', 'sneaky'], 'normal'), aiTalk: sget('lhsc.tt.aitalk') !== '0', opts: false });
+Object.assign(ui, { rule: pref('rule', ['high', 'low'], 'high'), cards: cleanCards(sget('lhsc.tt.cards') || (sget('lhsc.tt.size') === 'quick' ? 12 : CARDS.length)), format: pref('format', ['single', 'bo3', 'bo5'], 'single'), diff: pref('diff', ['easy', 'normal', 'sneaky'], 'normal'), aiTalk: sget('lhsc.tt.aitalk') !== '0', opts: false });
 function setOpt(k, v) { ui[k] = v; sset('lhsc.tt.' + k, v); render(); }
-const gameOpts = () => ({ mode: ui.mode, rule: ui.rule, size: ui.size, format: ui.format });
+const gameOpts = () => ({ mode: ui.mode, rule: ui.rule, cards: ui.cards, format: ui.format });
 function setTalk(on) { ui.aiTalk = !!on; sset('lhsc.tt.aitalk', ui.aiTalk ? '1' : '0'); if (!ui.aiTalk) { const b = document.getElementById('bubble'); if (b) b.hidden = true; } render(); }
 function talkBtn() { return ui.solo ? h('button', { class: 'btn small ghost', type: 'button', 'aria-pressed': ui.aiTalk ? 'true' : 'false', onclick: () => setTalk(!ui.aiTalk), text: ui.aiTalk ? 'Opponent comments: on' : 'Opponent comments: off' }) : null; }
 function setMode(m) { setOpt('mode', m === 'alternate' ? 'alternate' : 'winner'); }
@@ -3807,9 +3822,15 @@ function modePick() {
 function optsSummary() {
   const p = [];
   if (ui.rule === 'low') p.push('Lowest wins');
-  if (ui.size === 'quick') p.push('Quick');
+  if (ui.cards < CARDS.length) p.push(ui.cards + ' cards');
   if (ui.format !== 'single') p.push(FORMATS[ui.format].label);
   return p.length ? p.join(' · ') : 'Standard rules';
+}
+function setCards(v) {
+  ui.cards = cleanCards(v); sset('lhsc.tt.cards', String(ui.cards));
+  const a = document.getElementById('cardsval'), b = document.getElementById('cardseach'), r = document.getElementById('cardsrange'), e = document.querySelector('.opts summary em');
+  if (a) a.textContent = ui.cards + ' cards'; if (b) b.textContent = (ui.cards / 2) + ' each'; if (e) e.textContent = optsSummary();
+  if (r) r.setAttribute('aria-valuetext', ui.cards + ' cards, ' + (ui.cards / 2) + ' each');
 }
 function optionsPanel() {
   return h('details', { class: 'opts', open: ui.opts ? true : null, ontoggle: e => { ui.opts = e.target.open; } },
@@ -3818,7 +3839,10 @@ function optionsPanel() {
       h('div', { class: 'field' }, h('span', { class: 'lab', id: 'rulelab', text: 'Which value wins?' }),
         h('div', { class: 'segs2', role: 'radiogroup', 'aria-labelledby': 'rulelab' }, seg('', 'rule', 'high', 'Highest wins', 'The usual rule'), seg('', 'rule', 'low', 'Lowest wins', 'Smallest number takes it'))),
       h('div', { class: 'field' }, h('span', { class: 'lab', id: 'sizelab', text: 'Game length' }),
-        h('div', { class: 'segs2', role: 'radiogroup', 'aria-labelledby': 'sizelab' }, seg('', 'size', 'full', 'Full game', '12 cards each'), seg('', 'size', 'quick', 'Quick game', '6 cards each'))),
+        h('div', { class: 'cardsel' },
+          h('div', { class: 'cardread' }, h('b', { id: 'cardsval', text: ui.cards + ' cards' }), h('span', { id: 'cardseach', text: (ui.cards / 2) + ' each' })),
+          h('input', { type: 'range', id: 'cardsrange', min: String(MIN_CARDS), max: String(CARDS.length), step: '2', value: String(ui.cards), 'aria-labelledby': 'sizelab', 'aria-valuetext': ui.cards + ' cards, ' + (ui.cards / 2) + ' each', oninput: e => setCards(e.target.value) }),
+          h('div', { class: 'cardticks' }, h('span', { text: MIN_CARDS + ' · quick' }), h('span', { text: CARDS.length + ' · full' })))),
       h('div', { class: 'field' }, h('span', { class: 'lab', id: 'fmtlab', text: 'Match' }),
         h('div', { class: 'segs3', role: 'radiogroup', 'aria-labelledby': 'fmtlab' }, seg('', 'format', 'single', 'Single', 'One game'), seg('', 'format', 'bo3', 'Best of 3', 'First to 2'), seg('', 'format', 'bo5', 'Best of 5', 'First to 3')))));
 }
@@ -4026,7 +4050,7 @@ function devPlay() {
   const d = ui.dv, rest = shuffle(CARDS.map((_, i) => i).filter(i => i !== d.a && i !== d.b));
   startSolo();
   const g = clone(G);
-  const per = g.size === 'quick' ? 6 : 12;
+  const per = g.cards / 2;
   g.hands = { A: [d.a, ...rest.slice(0, per - 1)], B: [d.b, ...rest.slice(per - 1, 2 * per - 2)] };
   g.pot = []; g.chooser = 'A'; g.phase = 'choose'; g.pick = null;
   ui.devOpen = false; hideEgg(); write(g);
