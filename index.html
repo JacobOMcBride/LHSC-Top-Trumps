@@ -256,6 +256,7 @@ input.codein:focus-visible { outline: 2px solid var(--brass); outline-offset: 1p
 .cer { width: 100%; max-width: 640px; border: 1.5px solid var(--felt-line); border-radius: 8px; overflow: hidden; background: #0F1914; box-shadow: 0 10px 30px rgba(0,0,0,.45); }
 .cer svg { display: block; width: 100%; height: auto; }
 .cer .cert { font-family: var(--f-ui); font-weight: 800; font-size: 20px; letter-spacing: .12em; }
+.cer .cert.stampt { font-size: 70px; letter-spacing: 6px; }
 .cer .cers { font-family: var(--f-ui); font-weight: 700; font-size: 9px; letter-spacing: .3em; }
 .cer .nm { font-family: var(--f-ui); font-weight: 800; font-size: 17px; letter-spacing: .14em; }
 .cer .ban { transform-box: fill-box; transform-origin: 50% 0; }
@@ -3711,7 +3712,7 @@ function cerScene(kind, name) {
       '<g class="leaf"><rect x="448" y="100" width="154" height="280" fill="#4A3426" stroke="#2B1D14" stroke-width="3"/><rect x="462" y="116" width="58" height="104" fill="none" stroke="#3A281C" stroke-width="3"/><rect x="530" y="116" width="58" height="104" fill="none" stroke="#3A281C" stroke-width="3"/><rect x="462" y="236" width="126" height="128" fill="none" stroke="#3A281C" stroke-width="3"/><circle cx="578" cy="240" r="6" fill="#D9B65A"/></g>' +
       '<rect x="476" y="62" width="98" height="26" rx="3" fill="#1E5A36" stroke="#D9B65A" stroke-width="2"/><text x="525" y="81" text-anchor="middle" class="cert" fill="#EEE5CE" font-size="19">EXIT</text></g>';
     const arm = pxSpeech(['GO JOIN A', 'BOOMER CLUB', 'LOSER'], 212, 90, 3);
-    const stamp = '<g class="stamp"><g transform="translate(392 322) rotate(-10) scale(.78)"><rect x="-150" y="-44" width="300" height="88" rx="8" fill="rgba(20,10,8,.35)" stroke="#E4705A" stroke-width="7"/><rect x="-140" y="-34" width="280" height="68" rx="4" fill="none" stroke="#E4705A" stroke-width="2.5"/><text x="0" y="22" text-anchor="middle" class="cert" font-size="68" fill="#E4705A" letter-spacing="8">EXILED</text></g></g>';
+    const stamp = '<g class="stamp"><g transform="translate(392 322) rotate(-10) scale(.78)"><rect x="-150" y="-44" width="300" height="88" rx="8" fill="rgba(20,10,8,.35)" stroke="#E4705A" stroke-width="7"/><rect x="-140" y="-34" width="280" height="68" rx="4" fill="none" stroke="#E4705A" stroke-width="2.5"/><text x="0" y="24" text-anchor="middle" class="cert stampt" fill="#E4705A">EXILED</text></g></g>';
     body = '<defs><linearGradient id="' + id + 'out" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B9C8CE"/><stop offset="1" stop-color="#6F8790"/></linearGradient></defs>' + door + bans +
       '<g class="sam sad"><image href="' + sam + '" x="8" y="98" width="288" height="302" preserveAspectRatio="xMidYMax meet"/></g>' + arm + player(356, 262, .82) + '<rect class="vig" width="640" height="400" fill="url(#' + id + 'vg)"/>' + stamp;
   }
