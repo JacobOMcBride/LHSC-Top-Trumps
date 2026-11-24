@@ -269,7 +269,8 @@ input.codein:focus-visible { outline: 2px solid var(--brass); outline-offset: 1p
 .cer.win .head { animation: nod .6s ease-out calc(2.4s + var(--el, 0s)) backwards; }
 .cer .spark { opacity: 0; transform-box: fill-box; transform-origin: center; animation: spark .9s ease-out calc(2.5s + var(--sd) + var(--el, 0s)) both; }
 .cer .conf { opacity: 0; transform-box: fill-box; transform-origin: center; animation: confall var(--dur) ease-in calc(var(--d) + var(--el, 0s)) both; }
-.cer .arm { transform-origin: 222px 280px; animation: armout .5s ease-out calc(.9s + var(--el, 0s)) backwards; }
+.cer .speech { transform-origin: 224px 210px; animation: pxpop .4s steps(4, end) calc(.8s + var(--el, 0s)) backwards; }
+.cer .px { animation: pxin .01s steps(1, end) calc(1.2s + var(--i) * .055s + var(--el, 0s)) backwards; }
 .cer.lose .ply { opacity: 0; transform-origin: 356px 330px; animation: kicked 1.3s cubic-bezier(.5,0,.8,1) calc(1.6s + var(--el, 0s)) both; }
 .cer .leaf { transform-origin: 448px 240px; transform: scaleX(.12); animation: dooropen .6s ease-in-out calc(1.4s + var(--el, 0s)) both; }
 .cer .stamp { transform-origin: 392px 322px; opacity: .94; animation: stampin .45s cubic-bezier(.2,.9,.3,1.3) calc(2.9s + var(--el, 0s)) both; }
@@ -281,6 +282,8 @@ input.codein:focus-visible { outline: 2px solid var(--brass); outline-offset: 1p
 .cerq { margin: 0; max-width: 34ch; font-family: var(--f-type); font-size: 17px; line-height: 1.35; color: var(--chalk); animation: fadeup .6s ease-out calc(var(--ft) + .4s + var(--el, 0s)) backwards; }
 .cerq span { display: block; margin-top: 6px; font-family: var(--f-ui); font-size: 14px; letter-spacing: .14em; text-transform: uppercase; color: var(--brass); }
 .cerprevin { width: min(640px, 100%); }
+.pile .who .nm { max-width: 16ch; }
+.wrap { padding-bottom: 76px; }
 .herologo { width: 84px; height: 84px; display: block; margin: 0 0 14px; filter: drop-shadow(0 4px 10px rgba(0,0,0,.45)); }
 @keyframes unfurl { from { transform: scaleY(0); } 70% { transform: scaleY(1.07); } to { transform: scaleY(1); } }
 @keyframes sway { from { transform: rotate(-1.8deg); } to { transform: rotate(1.8deg); } }
@@ -292,7 +295,8 @@ input.codein:focus-visible { outline: 2px solid var(--brass); outline-offset: 1p
 @keyframes nod { 0% { transform: none; } 40% { transform: translateY(8px); } 100% { transform: none; } }
 @keyframes spark { 0% { opacity: 1; transform: scale(0) rotate(0); } 50% { opacity: 1; transform: scale(1.5) rotate(45deg); } 100% { opacity: 0; transform: scale(0) rotate(90deg); } }
 @keyframes confall { 0% { opacity: 1; transform: translate(0,0) rotate(0); } 85% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--dx), 440px) rotate(var(--r)); } }
-@keyframes armout { from { transform: scale(0); } to { transform: none; } }
+@keyframes pxpop { from { transform: scale(0); } to { transform: none; } }
+@keyframes pxin { from { opacity: 0; } to { opacity: 1; } }
 @keyframes kicked { 0% { opacity: 1; transform: none; } 20% { opacity: 1; transform: translate(-10px,0) rotate(5deg); } 100% { opacity: 0; transform: translate(190px,-8px) scale(.45) rotate(-14deg); } }
 @keyframes dooropen { from { transform: scaleX(1); } to { transform: scaleX(.12); } }
 @keyframes stampin { from { opacity: 0; transform: scale(3.2); } 60% { opacity: 1; } to { opacity: .94; transform: none; } }
@@ -301,6 +305,51 @@ input.codein:focus-visible { outline: 2px solid var(--brass); outline-offset: 1p
 @keyframes popin { from { opacity: 0; transform: scale(.4); } to { opacity: 1; transform: none; } }
 @keyframes fadeup { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .cer *, .cer svg, .cerover .cerfinal, .cerq { animation: none !important; } }
+.segs3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.segs3 .seg { padding: 9px 10px; }
+.segs3 .seg b { font-size: 16px; letter-spacing: .04em; }
+.segs3 .seg span { font-size: 12px; overflow-wrap: anywhere; }
+.opts { border: 1.5px solid var(--felt-line); border-radius: 6px; background: rgba(0,0,0,.12); }
+.opts summary { cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 14px; font-family: var(--f-ui); font-weight: 800; font-size: 17px; letter-spacing: .08em; text-transform: uppercase; }
+.opts summary::-webkit-details-marker { display: none; }
+.opts summary::after { content: '+'; color: var(--brass); font-size: 22px; line-height: 1; }
+.opts[open] summary::after { content: '–'; }
+.opts summary em { margin-left: auto; font-style: normal; font-family: var(--f-body); font-weight: 500; font-size: 13px; letter-spacing: 0; text-transform: none; color: var(--chalk-dim); text-align: right; }
+.opts summary:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+.optsbody { display: grid; gap: 14px; padding: 2px 14px 14px; }
+.final.sm { font-size: clamp(44px, 12vw, 72px); }
+.bigscore { display: flex; align-items: flex-start; justify-content: center; gap: 18px; font-family: var(--f-ui); font-weight: 800; }
+.bigscore .n { display: block; font-size: 84px; line-height: .95; color: var(--brass); font-variant-numeric: tabular-nums; }
+.bigscore i { font-style: normal; font-size: 54px; line-height: 1.05; color: var(--chalk-dim); }
+.bigscore small { display: block; font-size: 14px; letter-spacing: .14em; text-transform: uppercase; color: var(--chalk-dim); font-weight: 600; max-width: 12ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sndbtn { position: fixed; left: max(14px, env(safe-area-inset-left, 0px)); bottom: max(14px, env(safe-area-inset-bottom, 0px)); z-index: 14; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; cursor: pointer; background: var(--felt-deep); color: var(--brass); border: 1.5px solid var(--felt-line); box-shadow: 0 4px 14px rgba(0,0,0,.4); padding: 0; }
+.sndbtn[aria-pressed="false"] { color: var(--chalk-dim); }
+.sndbtn:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+.bubble { position: fixed; z-index: 17; top: max(72px, calc(env(safe-area-inset-top, 0px) + 60px)); left: 50%; transform: translateX(-50%); max-width: min(420px, calc(100vw - 28px)); display: grid; gap: 2px; padding: 10px 16px; border-radius: 12px; background: var(--chalk); color: var(--ink); box-shadow: 0 10px 30px rgba(0,0,0,.5); font-family: var(--f-type); font-size: 15px; line-height: 1.3; text-align: left; }
+.bubble b { font-family: var(--f-ui); font-weight: 800; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--brick); }
+.bubble.in { animation: bubblein .35s cubic-bezier(.2,.9,.3,1.2); }
+@keyframes bubblein { from { opacity: 0; transform: translate(-50%, -14px) scale(.92); } to { opacity: 1; transform: translateX(-50%); } }
+.reacts { position: fixed; inset: 0; z-index: 18; pointer-events: none; overflow: hidden; }
+.react { position: absolute; bottom: 18%; display: grid; justify-items: center; gap: 2px; animation: reactfloat 2.5s ease-out forwards; }
+.react .em { font-size: 44px; line-height: 1; filter: drop-shadow(0 4px 8px rgba(0,0,0,.45)); }
+.react .by { font-family: var(--f-ui); font-weight: 700; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--chalk); background: rgba(10,16,12,.7); padding: 1px 7px; border-radius: 8px; max-width: 12ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@keyframes reactfloat { 0% { transform: translateY(0) scale(.5); opacity: 0; } 12% { transform: translateY(-30px) scale(1.15); opacity: 1; } 100% { transform: translateY(-62vh) scale(1); opacity: 0; } }
+.reactbar { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 14px 0 4px; }
+.react-btn { appearance: none; cursor: pointer; width: 52px; height: 52px; border-radius: 50%; font-size: 26px; line-height: 1; background: rgba(0,0,0,.2); border: 1.5px solid var(--felt-line); color: var(--chalk); padding: 0; }
+.react-btn:active { transform: scale(.92); }
+.react-btn:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+.predict { display: grid; gap: 10px; max-width: 560px; margin: 16px auto 0; }
+.predhead { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.predrow { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.pred { appearance: none; cursor: pointer; min-height: 48px; padding: 6px 8px; border-radius: 4px; background: transparent; color: var(--chalk); border: 1.5px solid var(--felt-line); font-family: var(--f-ui); font-weight: 800; font-size: 17px; letter-spacing: .05em; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pred.on { background: var(--brass); border-color: var(--brass); color: var(--ink); }
+.pred:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+.crowd { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.crowd li { display: flex; justify-content: space-between; gap: 10px; padding: 5px 10px; border-radius: 4px; background: rgba(0,0,0,.18); font-family: var(--f-ui); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.crowd li.me { background: rgba(217,182,90,.16); color: var(--brass); }
+.sfxrow { flex-wrap: wrap; }
+@media (prefers-reduced-motion: reduce) { .react { animation: reactfade 1.6s linear forwards; } .bubble.in { animation: none; } }
+@keyframes reactfade { 0% { opacity: 0; } 15% { opacity: 1; } 100% { opacity: 0; } }
 </style>
 </head><body>
 <div class="wrap" id="app"></div>
@@ -2651,14 +2700,23 @@ function h(tag, props, ...kids) {
 const other = s => (s === 'A' ? 'B' : 'A');
 
 /* ---------- game rules (pure) ---------- */
+const FORMATS = { single: { n: 1, label: 'Single game' }, bo3: { n: 2, label: 'Best of 3' }, bo5: { n: 3, label: 'Best of 5' } };
+const targetWins = s => (FORMATS[s.format] || FORMATS.single).n;
+const isMatch = s => !!s.format && s.format !== 'single';
+/* a game that ends a match: every single game, or the game where someone reaches the target in a best-of series */
+function isFinal(s) { return s.status === 'over' && (!isMatch(s) || (s.winner !== 'draw' && s.series[s.winner] >= targetWins(s))); }
+const beats = (rule, x, y) => (rule === 'low' ? x < y : x > y);
 function newDeal(base) {
-  const ids = shuffle(CARDS.map((_, i) => i));
-  const half = Math.floor(ids.length / 2);
   const s = clone(base);
-  s.status = 'playing';
-  s.hands = { A: ids.slice(0, half), B: ids.slice(half, half * 2) };
-  s.pot = [];
   s.mode = s.mode === 'alternate' ? 'alternate' : 'winner';
+  s.rule = s.rule === 'low' ? 'low' : 'high';
+  s.size = s.size === 'quick' ? 'quick' : 'full';
+  s.format = FORMATS[s.format] ? s.format : 'single';
+  const ids = shuffle(CARDS.map((_, i) => i));
+  const per = s.size === 'quick' ? 6 : Math.floor(ids.length / 2);
+  s.status = 'playing';
+  s.hands = { A: ids.slice(0, per), B: ids.slice(per, per * 2) };
+  s.pot = [];
   s.chooser = randInt(2) ? 'A' : 'B';
   s.phase = 'choose';
   s.round = 1;
@@ -2676,7 +2734,7 @@ function applyPick(g, stat) {
   const a = s.hands.A[0], b = s.hands.B[0];
   const va = CARDS[a].v[stat], vb = CARDS[b].v[stat];
   s.phase = 'reveal';
-  s.pick = { stat, a, b, va, vb, res: va === vb ? 'draw' : (va > vb ? 'A' : 'B') };
+  s.pick = { stat, a, b, va, vb, res: va === vb ? 'draw' : (beats(s.rule, va, vb) ? 'A' : 'B') };
   s.t = Date.now();
   return s;
 }
@@ -2707,16 +2765,28 @@ function applyCollect(g) {
   s.t = Date.now();
   return s;
 }
+/* resigning a best-of series forfeits the whole match */
 function applyResign(g, who) {
   const s = clone(g);
   s.status = 'over';
   s.winner = other(who);
   s.reason = 'resigned';
-  s.series[s.winner] += 1;
+  s.series[s.winner] = isMatch(s) ? Math.max(s.series[s.winner] + 1, targetWins(s)) : s.series[s.winner] + 1;
   s.t = Date.now();
   return s;
 }
-
+function seriesChip(s, me) {
+  const op = other(me), bo = isMatch(s);
+  if (!bo && !(s.series.A || s.series.B)) return null;
+  return h('span', { class: 'chip series', text: (bo ? FORMATS[s.format].label + ' · ' : 'Series ') + s.series[me] + '–' + s.series[op] });
+}
+function rulesChip() {
+  const s = G, parts = [];
+  if (!s) return null;
+  if (s.rule === 'low') parts.push('Lowest wins');
+  if (s.size === 'quick') parts.push('Quick game');
+  return parts.length ? h('span', { class: 'chip series', text: parts.join(' · ') }) : null;
+}
 /* ---------- state (browser-to-browser link, matched by a short game code) ---------- */
 const Peer = (window.peerjs && window.peerjs.Peer) || undefined;
 let G = null, side = null, peer = null, dc = null;
@@ -2811,9 +2881,10 @@ function wireChannel(conn) {
     if (!m || typeof m !== 'object' || m.t === 'ping') return;
     if (m.t === 'bye') { if (dc === conn) lost(); return; }
     if (m.t === 'chat') { chatFromPlayerLink(m); return; }
+    if (m.t === 'react') { reactShow(m.e, String(m.from || '').slice(0, 16)); return; }
     if (m.t === 'hello' && side === 'A' && G) { sendState(); }
     else if (m.t === 'hello' && ui.net && ui.net.role === 'host' && !G) {
-      const base = { v: 1, players: { A: { id: 'A', name: cleanName(ui.name) }, B: { id: 'B', name: cleanName(m.name) } }, status: 'waiting', series: { A: 0, B: 0 }, games: 0, mode: ui.mode };
+      const base = { v: 1, players: { A: { id: 'A', name: cleanName(ui.name) }, B: { id: 'B', name: cleanName(m.name) } }, status: 'waiting', series: { A: 0, B: 0 }, games: 0, ...gameOpts() };
       side = 'A'; ui.net = null;
       write(newDeal(base));
     } else if (m.t === 'state' && m.s && m.s.hands && m.s.players) {
@@ -2834,7 +2905,7 @@ function sendState() {
   if (dc && dc.open) { try { dc.send({ t: 'state', s: G, w: specs.length }); } catch (e) {} }
   sendSpecs();
 }
-function sendSpecs() { specs.forEach(c => { if (c.open) { try { c.send({ t: 'state', s: G, w: specs.length }); } catch (e) {} } }); }
+function sendSpecs() { scorePreds(); const b = boardPayload(); specs.forEach(c => { if (c.open) { try { c.send({ t: 'state', s: G, w: specs.length, b }); } catch (e) {} } }); }
 function announceSpecs() { if (G) sendState(); render(); }
 function write(state) {
   if (ui.dev && ui.solo && ui.devForce && state.phase === 'reveal' && state.pick && !state.pick.forced) { state.pick.res = ui.devForce; state.pick.forced = true; ui.devForce = null; }
@@ -2842,7 +2913,7 @@ function write(state) {
 }
 
 function toLobby(msg) {
-  closePeer(); clearTimeout(aiTimer); ui.solo = false; ui.watch = false; ui.hostCode = ''; chatReset();
+  closePeer(); clearTimeout(aiTimer); ui.pred = null; ui.board = null; lastScored = ''; lastTally = null; ui.solo = false; ui.watch = false; ui.hostCode = ''; chatReset();
   G = null; side = null; ui.net = null; ui.sel = null; ui.confirmResign = false; ui.shownKey = ''; ui.busy = false; ui.code = '';
   say(msg || '');
   render();
@@ -2920,7 +2991,7 @@ function collect() {
   write(applyCollect(G));
 }
 function resign() { if (!G || G.status !== 'playing') return; ui.confirmResign = false; write(applyResign(G, side)); }
-function rematch() { if (!G || G.status !== 'over' || side !== 'A') return; ui.sel = null; ui.shownKey = ''; write(newDeal(G)); }
+function rematch() { if (!G || G.status !== 'over' || side !== 'A') return; ui.sel = null; ui.shownKey = ''; const base = clone(G); if (isMatch(G) && isFinal(G)) base.series = { A: 0, B: 0 }; write(newDeal(base)); }
 async function copyFrom(id, msg) {
   const el = document.getElementById(id); if (!el) return;
   el.focus(); el.select();
@@ -2941,37 +3012,6 @@ function hashJoin() {
 hashJoin();
 addEventListener('hashchange', hashJoin);
 
-/* ---------- play the computer ---------- */
-let aiTimer = 0;
-function startSolo() {
-  ui.name = cleanName(ui.name); sset('lhsc.tt.name', ui.name);
-  closePeer(); clearTimeout(aiTimer); chatReset();
-  ui.solo = true; ui.net = null; ui.view = null; say('');
-  side = 'A';
-  write(newDeal({ v: 1, players: { A: { id: 'A', name: ui.name }, B: { id: 'B', name: 'Computer' } }, status: 'waiting', series: { A: 0, B: 0 }, games: 0, mode: ui.mode }));
-}
-/* the computer rates each stat on its top card by the share of all 24 cards it would beat */
-function aiChoose(card) {
-  const score = card.v.map((v, i) => {
-    let w = 0; CARDS.forEach(c => { if (c.v[i] < v) w += 1; else if (c.v[i] === v) w += 0.5; });
-    return w / CARDS.length + (Math.random() * 0.08);
-  });
-  return score.indexOf(Math.max(...score));
-}
-function aiTick() {
-  clearTimeout(aiTimer);
-  if (!ui.solo || !G || G.status !== 'playing') return;
-  const key = G.games + ':' + G.round + ':' + G.phase;
-  const still = () => ui.solo && G && G.status === 'playing' && key === G.games + ':' + G.round + ':' + G.phase;
-  if (G.phase === 'choose' && G.chooser === 'B') {
-    aiTimer = setTimeout(() => { if (still()) write(applyPick(G, aiChoose(CARDS[G.hands.B[0]]))); }, 1100 + randInt(900));
-  } else if (G.phase === 'reveal') {
-    const resolver = G.pick.res === 'draw' ? G.chooser : G.pick.res;
-    if (resolver === 'B') aiTimer = setTimeout(() => { if (still()) write(applyCollect(G)); }, 1800);
-  }
-}
-function setMode(m) { ui.mode = m === 'alternate' ? 'alternate' : 'winner'; sset('lhsc.tt.mode', ui.mode); render(); }
-
 /* ---------- spectators ---------- */
 function watchIce(conn, dead) {
   const pc = conn.peerConnection; if (!pc || pc.__lhscWatch) return; pc.__lhscWatch = true;
@@ -2989,7 +3029,7 @@ function addSpec(conn) {
   const drop = () => { const i = specs.indexOf(conn); if (i >= 0) { specs.splice(i, 1); announceSpecs(); } };
   const join = () => {
     if (added) return; added = true; specs.push(conn);
-    try { conn.send(G ? { t: 'state', s: G, w: specs.length } : { t: 'wait' }); } catch (e) {}
+    try { conn.send(G ? { t: 'state', s: G, w: specs.length, b: boardPayload() } : { t: 'wait' }); } catch (e) {}
     const hist = chat.msgs.slice(-40).map(x => ({ from: x.me ? ui.name || 'Host' : x.name, spec: !!x.spec, text: x.text }));
     if (hist.length) { try { conn.send({ t: 'chathist', msgs: hist }); } catch (e) {} }
     announceSpecs();
@@ -2999,6 +3039,8 @@ function addSpec(conn) {
     if (!m || typeof m !== 'object') return;
     if (m.t === 'ping') { try { conn.send({ t: 'ping' }); } catch (e) {} }
     else if (m.t === 'hello') { if (m.name) conn.specName = String(m.name).replace(/\s+/g, ' ').trim().slice(0, 16); try { conn.send(G ? { t: 'state', s: G, w: specs.length } : { t: 'wait' }); } catch (e) {} }
+    else if (m.t === 'react') hostReact(conn, m);
+    else if (m.t === 'pred') hostPred(conn, m);
     else if (m.t === 'chat') {
       const text = String(m.text == null ? '' : m.text).slice(0, 500); if (!text.trim()) return;
       const from = conn.specName || 'Spectator';
@@ -3031,7 +3073,8 @@ function wireWatcher(conn) {
     if (m.t === 'full') { toLobby('That game already has the maximum number of spectators.'); return; }
     if (m.t === 'chat') { chatAdd({ me: false, name: String(m.from || 'Someone').slice(0, 16), spec: !!m.spec, text: String(m.text == null ? '' : m.text).slice(0, 500) }); return; }
     if (m.t === 'chathist' && Array.isArray(m.msgs)) { m.msgs.slice(-40).forEach(x => chatAdd({ me: false, name: String(x.from || '').slice(0, 16), spec: !!x.spec, text: String(x.text || '').slice(0, 500) }, true)); return; }
-    if (m.t === 'state' && m.s && m.s.hands && m.s.players) { if (typeof m.w === 'number') ui.specN = m.w; G = m.s; side = 'A'; ui.net = null; render(); }
+    if (m.t === 'react') { reactShow(m.e, String(m.from || '').slice(0, 16)); return; }
+    if (m.t === 'state' && m.s && m.s.hands && m.s.players) { if (typeof m.w === 'number') ui.specN = m.w; if (m.b) ui.board = m.b; G = m.s; side = 'A'; ui.net = null; render(); }
   });
   conn.on('close', () => { if (dc === conn) toLobby('The host left, so the game ended.'); });
   conn.on('error', () => { if (dc === conn) lost(); });
@@ -3060,8 +3103,323 @@ function chatFromPlayerLink(m) {
     chatAdd({ me: false, name: String(m.from || (G && side ? G.players[other(side)].name : 'Opponent')).slice(0, 16), spec: !!m.spec, text });
   }
 }
+/* ---------- game options (remembered on this device) ---------- */
+const pref = (k, ok, d) => { const v = sget('lhsc.tt.' + k); return ok.includes(v) ? v : d; };
+Object.assign(ui, { rule: pref('rule', ['high', 'low'], 'high'), size: pref('size', ['full', 'quick'], 'full'), format: pref('format', ['single', 'bo3', 'bo5'], 'single'), diff: pref('diff', ['easy', 'normal', 'sneaky'], 'normal'), opts: false });
+function setOpt(k, v) { ui[k] = v; sset('lhsc.tt.' + k, v); render(); }
+const gameOpts = () => ({ mode: ui.mode, rule: ui.rule, size: ui.size, format: ui.format });
+function setMode(m) { setOpt('mode', m === 'alternate' ? 'alternate' : 'winner'); }
 
-/* ---------- chat (two-player games only; lives outside the table so typing is never interrupted) ---------- */
+/* ---------- play the computer: three opponents ---------- */
+const PERSONAS = {
+  easy: {
+    name: 'The Probationer', tag: 'Still learning the ropes',
+    greet: ['Hello! I am new here. Be gentle.', 'First day at the club. Which end do I hold?'],
+    win: ['Oh! I won? Is that allowed?', 'Beginner’s luck, apparently.', 'Sorry! Sorry. Not very sorry.', 'I did a thing!'],
+    lose: ['Ah. Right. Noted.', 'I will pretend that was deliberate.', 'Is it too late to ask for a lesson?', 'Ow. Fair enough.'],
+    gwin: ['I won?! Somebody tell the committee.'], glose: ['Fair enough. Can I buy you a tea at the cafe?'],
+    reply: ['I do not know what that means but I agree.', 'Could you say that more slowly?', 'Right. Yes. Absolutely.', 'Is that a compliment?']
+  },
+  normal: {
+    name: 'Range Officer', tag: 'Safe, steady, fair',
+    greet: ['Range is hot. Pick your stat.', 'Rules are simple. Highest card wins. Mostly.'],
+    win: ['Muzzles down, please. That one is mine.', 'Cease fire. I will take those.', 'Point taken. Literally.', 'Within tolerance. Barely.'],
+    lose: ['Noted for the incident log.', 'Lucky. Not safe, but lucky.', 'That was within tolerance.', 'I will allow it.'],
+    gwin: ['Range is clear. Good game.'], glose: ['Paperwork is on me. Well played.'],
+    reply: ['Please keep chat to the safe side of the firing point.', 'Copy that.', 'Is that a formal complaint?', 'Noted. Eyes on your card.']
+  },
+  sneaky: {
+    name: 'The Chairman', tag: 'Remembers every card',
+    greet: ['Welcome. I have read the rules. Have you?', 'Do take a seat. The minutes begin now.'],
+    win: ['The motion carries.', 'As per the minutes, that is mine.', 'I will have that recorded. In my favour.', 'Please do not park on Site 7.'],
+    lose: ['A point of order: that should not have counted.', 'I will be raising this at the AGM.', 'The committee will take note.', 'Hm. Unexpected. Temporary.'],
+    gwin: ['Meeting adjourned. In my favour.'], glose: ['I demand a recount.'],
+    reply: ['That will be taken under any other business.', 'I will table that for the next meeting.', 'Interesting. And irrelevant.', 'Quiet, please. The Chairman is thinking.']
+  }
+};
+const persona = () => PERSONAS[(G && G.ai) || ui.diff] || PERSONAS.normal;
+const pickOf = a => a[randInt(a.length)];
+let aiTimer = 0;
+function startSolo() {
+  ui.name = cleanName(ui.name); sset('lhsc.tt.name', ui.name);
+  closePeer(); clearTimeout(aiTimer); chatReset();
+  ui.solo = true; ui.net = null; ui.view = null; say('');
+  side = 'A'; aiMem.game = -1; aiNote.key = '';
+  const base = Object.assign({ v: 1, players: { A: { id: 'A', name: ui.name }, B: { id: 'B', name: PERSONAS[ui.diff].name } }, status: 'waiting', series: { A: 0, B: 0 }, games: 0, ai: ui.diff }, gameOpts());
+  write(newDeal(base));
+}
+
+/* what the Sneaky opponent remembers: every card it has seen turned over this game */
+const aiMem = { game: -1, seen: new Set() };
+function aiSee(g) {
+  if (aiMem.game !== g.games) { aiMem.game = g.games; aiMem.seen = new Set(); }
+  if (g.phase === 'reveal' && g.pick) { aiMem.seen.add(g.pick.a); aiMem.seen.add(g.pick.b); }
+}
+function aiScores(card, pool, rule) {
+  return card.v.map((v, i) => {
+    let w = 0; pool.forEach(c => { if (c.v[i] === v) w += 0.5; else if (beats(rule, v, c.v[i])) w += 1; });
+    return pool.length ? w / pool.length : 0.5;
+  });
+}
+const argmax = a => a.indexOf(Math.max(...a));
+function aiChoose(card, g) {
+  const rule = g.rule || 'high', lvl = g.ai || 'normal';
+  const all = CARDS;
+  if (lvl === 'easy') {
+    if (randInt(100) < 45) return randInt(STATS.length);
+    return argmax(aiScores(card, all, rule).map(x => x + Math.random() * 0.3));
+  }
+  if (lvl === 'sneaky') {
+    const mine = new Set(g.hands.B), pot = new Set(g.pot);
+    const cand = CARDS.map((_, i) => i).filter(i => !mine.has(i) && !pot.has(i));
+    const known = cand.filter(i => aiMem.seen.has(i));                  /* seen, and not mine, so the opponent holds them */
+    const unseen = cand.filter(i => !aiMem.seen.has(i));
+    const unseenInHand = g.hands.A.length - known.length;               /* the pile shows its size; unseen cards sit on top of the ones just won */
+    const pool = (unseenInHand > 0 ? unseen : known).map(i => CARDS[i]);
+    return argmax(aiScores(card, pool.length ? pool : all, rule).map(x => x + Math.random() * 0.02));
+  }
+  return argmax(aiScores(card, all, rule).map(x => x + Math.random() * 0.08));
+}
+function aiTick() {
+  clearTimeout(aiTimer);
+  if (!ui.solo || !G || G.status !== 'playing') return;
+  aiSee(G);
+  const key = G.games + ':' + G.round + ':' + G.phase;
+  const still = () => ui.solo && G && G.status === 'playing' && key === G.games + ':' + G.round + ':' + G.phase;
+  if (G.phase === 'choose' && G.chooser === 'B') {
+    aiTimer = setTimeout(() => { if (still()) write(applyPick(G, aiChoose(CARDS[G.hands.B[0]], G))); }, 1100 + randInt(900));
+  } else if (G.phase === 'reveal') {
+    const resolver = G.pick.res === 'draw' ? G.chooser : G.pick.res;
+    if (resolver === 'B') aiTimer = setTimeout(() => { if (still()) write(applyCollect(G)); }, 1800);
+  }
+}
+
+/* the opponent talks: a speech bubble, and the same line in the chat log */
+const aiNote = { key: '', last: -9 };
+let bubbleTimer = 0;
+function aiSay(text, quiet) {
+  if (!ui.solo || !G) return;
+  const name = G.players.B.name;
+  chatAdd({ me: false, name, spec: false, text }, true);
+  if (quiet) return;
+  let b = document.getElementById('bubble');
+  if (!b) { b = h('div', { id: 'bubble', class: 'bubble', role: 'status' }, h('b', { id: 'bubblewho' }), h('span', { id: 'bubbletxt' })); document.body.append(b); }
+  document.getElementById('bubblewho').textContent = name; document.getElementById('bubbletxt').textContent = text;
+  b.hidden = false; b.classList.remove('in'); void b.offsetWidth; b.classList.add('in');
+  clearTimeout(bubbleTimer); bubbleTimer = setTimeout(() => { b.hidden = true; }, 5200);
+}
+function aiWatch() {
+  const b = document.getElementById('bubble');
+  if (!ui.solo || !G) { if (b) b.hidden = true; aiNote.key = ''; return; }
+  const P = persona();
+  let key = '';
+  if (G.status === 'playing' && G.round === 1 && G.phase === 'choose') key = 'g' + G.games;
+  else if (G.status === 'playing' && G.phase === 'reveal' && G.pick) key = 'r' + G.games + ':' + G.round;
+  else if (G.status === 'over') key = 'o' + G.games + ':' + G.winner;
+  if (!key || key === aiNote.key) return;
+  aiNote.key = key;
+  const kind = key[0];
+  if (kind === 'g') { if (G.games === 1 || randInt(2)) { const g = G.games; setTimeout(() => { if (ui.solo && G && G.games === g) aiSay(pickOf(P.greet)); }, 700); } return; }
+  if (kind === 'r') {
+    const res = G.pick.res; if (res === 'draw') return;
+    const n = G.round - aiNote.last;
+    if (n < 3 && randInt(100) < 70) return;                     /* never every round */
+    if (randInt(100) < 55) { aiNote.last = G.round; const g = G.games; setTimeout(() => { if (ui.solo && G && G.games === g) aiSay(pickOf(res === 'B' ? P.win : P.lose)); }, 750); }
+    return;
+  }
+  if (G.winner !== 'draw') { const w = G.winner, g = G.games; setTimeout(() => { if (ui.solo && G && G.games === g) aiSay(pickOf(w === 'B' ? P.gwin : P.glose)); }, 600); }
+}
+function aiReplyChat() {
+  if (!ui.solo || !G) return;
+  const g = G.games;
+  setTimeout(() => { if (ui.solo && G && G.games === g) { const t = pickOf(persona().reply); chatAdd({ me: false, name: G.players.B.name, spec: false, text: t }); } }, 800 + randInt(900));
+}
+/* ---------- sound: everything is synthesised, no audio files ---------- */
+const snd = { ctx: null, master: null, buf: null, on: (() => { const v = sget('lhsc.tt.snd'); if (v === '1') return true; if (v === '0') return false; try { return !matchMedia('(pointer: coarse)').matches; } catch (e) { return true; } })() };
+function sndCtx() {
+  if (!snd.on) return null;
+  if (!snd.ctx) {
+    try {
+      const C = window.AudioContext || window.webkitAudioContext; if (!C) return null;
+      snd.ctx = new C(); snd.master = snd.ctx.createGain(); snd.master.gain.value = 0.55; snd.master.connect(snd.ctx.destination);
+      const n = snd.ctx.sampleRate * 2, b = snd.ctx.createBuffer(1, n, snd.ctx.sampleRate), d = b.getChannelData(0);
+      for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+      snd.buf = b;
+    } catch (e) { snd.ctx = null; return null; }
+  }
+  if (snd.ctx.state === 'suspended') { try { const r = snd.ctx.resume(); if (r && r.catch) r.catch(() => {}); } catch (e) {} }
+  return snd.ctx;
+}
+/* one oscillator note with a quick attack and a fade; f2 slides the pitch */
+function tone(c, f, t, dur, type, vol, f2, lp) {
+  const o = c.createOscillator(), g = c.createGain(); let out = g;
+  o.type = type || 'sine'; o.frequency.setValueAtTime(f, t); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + dur);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g);
+  if (lp) { const l = c.createBiquadFilter(); l.type = 'lowpass'; l.frequency.value = lp; g.connect(l); out = l; }
+  out.connect(snd.master); o.start(t); o.stop(t + dur + 0.05);
+}
+/* filtered noise burst */
+function noise(c, t, dur, vol, ftype, f0, f1, q) {
+  const s = c.createBufferSource(); s.buffer = snd.buf; const f = c.createBiquadFilter(), g = c.createGain();
+  f.type = ftype || 'bandpass'; f.frequency.setValueAtTime(f0 || 1000, t); if (f1) f.frequency.exponentialRampToValueAtTime(f1, t + dur); f.Q.value = q || 0.8;
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  s.connect(f); f.connect(g); g.connect(snd.master); s.start(t, Math.random()); s.stop(t + dur + 0.05);
+}
+const clack = (c, t) => { noise(c, t, 0.035, 0.55, 'bandpass', 1900, 0, 1.4); tone(c, 190, t, 0.06, 'square', 0.18, 90); noise(c, t + 0.1, 0.045, 0.5, 'bandpass', 950, 0, 1.2); tone(c, 130, t + 0.1, 0.08, 'square', 0.18, 70); };
+const SFX = {
+  flip: (c, t) => { noise(c, t, 0.07, 0.35, 'highpass', 2600); tone(c, 560, t, 0.06, 'triangle', 0.1, 280); },
+  roundWin: (c, t) => { clack(c, t); [523, 659, 784].forEach((f, i) => tone(c, f, t + 0.2 + i * 0.09, 0.2, 'square', 0.07, 0, 2600)); },
+  roundLose: (c, t) => { tone(c, 330, t, 0.2, 'triangle', 0.2, 290); tone(c, 247, t + 0.17, 0.34, 'triangle', 0.2, 190); },
+  draw: (c, t) => { tone(c, 392, t, 0.13, 'sine', 0.22); tone(c, 392, t + 0.2, 0.13, 'sine', 0.22); },
+  fanfare: (c, t) => {
+    [[523, 0, .16], [523, .17, .16], [523, .34, .16], [659, .52, .5], [784, 1.0, .18], [659, 1.2, .14], [784, 1.38, .8]].forEach(n => { tone(c, n[0], t + n[1], n[2] + .12, 'sawtooth', 0.11, 0, 2400); tone(c, n[0] / 2, t + n[1], n[2] + .12, 'square', 0.05, 0, 1200); });
+    tone(c, 1047, t + 1.38, 1.0, 'triangle', 0.1, 0, 3000);
+  },
+  sparkle: (c, t) => { [1568, 2093, 2637, 3136, 2637, 3520].forEach((f, i) => tone(c, f, t + i * 0.07, 0.35, 'sine', 0.07)); },
+  sad: (c, t) => { [[311, 0, .55], [293, .6, .55], [277, 1.2, .55], [233, 1.8, 1.3]].forEach(n => tone(c, n[0], t + n[1], n[2], 'sawtooth', 0.12, n[0] * 0.93, 700)); },
+  thud: (c, t) => { tone(c, 95, t, 0.55, 'sine', 0.55, 38); noise(c, t, 0.25, 0.4, 'lowpass', 500, 120); },
+  creak: (c, t) => { noise(c, t, 0.8, 0.45, 'bandpass', 420, 160, 6); tone(c, 140, t, 0.8, 'sawtooth', 0.09, 90, 500); },
+  chat: (c, t) => { tone(c, 740, t, 0.09, 'sine', 0.12); tone(c, 988, t + 0.09, 0.12, 'sine', 0.12); },
+  react: (c, t) => { tone(c, 480, t, 0.14, 'sine', 0.14, 960); },
+  coin: (c, t) => { tone(c, 988, t, 0.09, 'square', 0.07, 0, 3000); tone(c, 1319, t + 0.09, 0.3, 'square', 0.07, 0, 3000); },
+  buzz: (c, t) => { tone(c, 120, t, 0.22, 'sawtooth', 0.12, 90, 600); },
+  blip: (c, t) => { tone(c, 540, t, 0.035, 'square', 0.05, 0, 2600); },
+  tick: (c, t) => { tone(c, 880, t, 0.04, 'square', 0.05, 0, 3000); },
+  /* easter eggs */
+  boom: (c, t) => { tone(c, 70, t, 1.2, 'sine', 0.6, 28); noise(c, t, 1.1, 0.5, 'lowpass', 700, 90); noise(c, t + 0.5, 1.4, 0.25, 'lowpass', 300, 70); tone(c, 110, t - 0.0, 1.6, 'sawtooth', 0.08, 55, 300); },
+  ding: (c, t) => { tone(c, 1760, t, 0.9, 'sine', 0.16); tone(c, 2637, t, 0.6, 'sine', 0.08); noise(c, t, 0.05, 0.2, 'highpass', 5000); },
+  thunk: (c, t) => { tone(c, 150, t, 0.1, 'triangle', 0.3, 80); noise(c, t, 0.06, 0.25, 'bandpass', 700); },
+  bang: (c, t) => { noise(c, t, 0.35, 0.8, 'lowpass', 6000, 300); tone(c, 140, t, 0.3, 'sine', 0.5, 40); },
+  engine: (c, t) => { tone(c, 55, t, 2.3, 'sawtooth', 0.16, 190, 500); tone(c, 83, t + 0.1, 2.2, 'square', 0.06, 230, 600); noise(c, t, 2.2, 0.06, 'bandpass', 700, 1500, 2); }
+};
+function sfx(name, delay) {
+  const c = sndCtx(); if (!c) return;
+  const f = SFX[name]; if (f) { try { f(c, c.currentTime + (delay || 0) + 0.02); } catch (e) {} }
+}
+function eggSfx(kind) {
+  if (kind === 'hood') { sfx('boom', 0.5); sfx('boom', 1.7); }
+  else if (kind === 'watch') sfx('ding', 0.45);
+  else if (kind === 'pistol') { sfx('thunk', 0.32); sfx('bang', 0.7); }
+  else if (kind === 'bmw') sfx('engine', 0.05);
+}
+function cerSfx(kind) {
+  if (kind === 'win') { sfx('fanfare', 1.4); sfx('sparkle', 2.5); sfx('sparkle', 3.1); }
+  else { for (let i = 0; i < 23; i++) sfx('blip', 1.2 + i * 0.055); sfx('sad', 2.0); sfx('creak', 1.5); sfx('thud', 3.0); }
+}
+/* the game hands us each new state; play the matching sound once per round and per result */
+function sfxCheck() {
+  if (!G) { ui.sfxKey = ''; return; }
+  if (G.status === 'playing' && G.phase === 'reveal' && G.pick) {
+    const k = 'r' + G.games + ':' + G.round;
+    if (k === ui.sfxKey) return; ui.sfxKey = k;
+    sfx('flip');
+    const p = G.pick;
+    if (ui.watch) {
+      const mine = ui.pred && ui.pred.k === G.games + ':' + G.round ? ui.pred.c : null;
+      if (mine) sfx(mine === (p.res === 'draw' ? 'D' : p.res) ? 'coin' : 'buzz', 0.45);
+    } else if (p.res === 'draw') sfx('draw', 0.35); else sfx(p.res === side ? 'roundWin' : 'roundLose', 0.35);
+  } else if (G.status === 'over') {
+    const k = 'o' + G.games + ':' + G.round + ':' + G.winner;
+    if (k === ui.sfxKey) return; ui.sfxKey = k;
+    if (G.winner === 'draw') sfx('draw');
+    else if (ui.watch) sfx('sparkle', 0.2);
+    else if (isFinal(G)) cerSfx(G.winner === side ? 'win' : 'lose');
+    else sfx(G.winner === side ? 'roundWin' : 'roundLose');
+  }
+}
+/* floating sound switch */
+function sndSync() {
+  let b = document.getElementById('sndbtn');
+  if (!b) {
+    b = h('button', { id: 'sndbtn', class: 'sndbtn', type: 'button', onclick: () => { snd.on = !snd.on; sset('lhsc.tt.snd', snd.on ? '1' : '0'); if (snd.on) { sndCtx(); sfx('tick'); } sndSync(); } });
+    document.body.append(b);
+  }
+  b.setAttribute('aria-pressed', snd.on ? 'true' : 'false');
+  b.setAttribute('aria-label', snd.on ? 'Sound on. Press to mute.' : 'Sound off. Press to turn on.');
+  b.title = snd.on ? 'Sound on' : 'Sound off';
+  b.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M3 9v6h4l5 4V5L7 9H3z" fill="currentColor"/>' + (snd.on ? '<path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>' : '<path d="M16 9l6 6M22 9l-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>') + '</svg>';
+}
+addEventListener('pointerdown', () => { if (snd.on) sndCtx(); }, { passive: true });
+addEventListener('keydown', () => { if (snd.on) sndCtx(); }, { passive: true });
+/* ---------- the crowd: reactions and round predictions ---------- */
+const REACTS = { clap: '👏', fire: '🔥', laugh: '😂', groan: '😬', wow: '😮' };
+const REACT_NAMES = { clap: 'Applause', fire: 'Fire', laugh: 'Laugh', groan: 'Groan', wow: 'Wow' };
+function reactShow(id, from) {
+  const em = REACTS[id]; if (!em) return;
+  let layer = document.getElementById('reacts');
+  if (!layer) { layer = h('div', { id: 'reacts', class: 'reacts', 'aria-hidden': 'true' }); document.body.append(layer); }
+  while (layer.childElementCount >= 14) layer.firstElementChild.remove();
+  const left = 8 + Math.random() * 78;
+  const el = h('div', { class: 'react', style: 'left:' + left.toFixed(1) + '%' }, h('span', { class: 'em', text: em }), h('span', { class: 'by', text: String(from || '').slice(0, 16) }));
+  layer.append(el); setTimeout(() => el.remove(), 2600);
+  sfx('react');
+}
+let lastReact = 0;
+function reactSend(id) {
+  if (!REACTS[id]) return;
+  const now = Date.now(); if (now - lastReact < 600) return; lastReact = now;
+  reactShow(id, 'You');
+  if (dc && dc.open) { try { dc.send({ t: 'react', e: id }); } catch (e) {} }
+}
+function reactBar() {
+  return h('div', { class: 'reactbar', role: 'group', 'aria-label': 'Send a reaction' },
+    Object.keys(REACTS).map(id => h('button', { class: 'react-btn', type: 'button', 'aria-label': REACT_NAMES[id], onclick: () => reactSend(id) }, REACTS[id])));
+}
+
+/* host side: collect predictions from spectators and score them when a round is revealed */
+let lastScored = '', lastTally = null;
+function scorePreds() {
+  if (!isHost() || !G || G.status !== 'playing' || G.phase !== 'reveal' || !G.pick) return;
+  const k = G.games + ':' + G.round; if (k === lastScored) return; lastScored = k;
+  const res = G.pick.res === 'draw' ? 'D' : G.pick.res, t = { k, A: 0, D: 0, B: 0 };
+  specs.forEach(c => { if (c.pred && c.pred.k === k) { t[c.pred.c] += 1; if (c.pred.c === res) c.score = (c.score || 0) + (res === 'D' ? 2 : 1); } });
+  lastTally = t;
+}
+function boardPayload() {
+  return { list: specs.map(c => ({ id: c.peer, n: c.specName || 'Spectator', p: c.score || 0 })).sort((a, b) => b.p - a.p).slice(0, 12), tally: lastTally };
+}
+function hostPred(conn, m) {
+  if (!G || G.status !== 'playing' || G.phase !== 'choose') return;
+  const k = G.games + ':' + G.round;
+  if (m.k !== k || !['A', 'D', 'B'].includes(m.c)) return;
+  conn.pred = { k, c: m.c };
+}
+function hostReact(conn, m) {
+  if (!REACTS[m.e]) return;
+  const now = Date.now(); if (now - (conn.lastReact || 0) < 450) return; conn.lastReact = now;
+  const from = conn.specName || 'Spectator';
+  reactShow(m.e, from); chatFanout({ t: 'react', e: m.e, from }, conn);
+}
+
+/* spectator side */
+function predict(c) {
+  const s = G; if (!s || s.status !== 'playing' || s.phase !== 'choose') return;
+  const k = s.games + ':' + s.round; ui.pred = { k, c };
+  if (dc && dc.open) { try { dc.send({ t: 'pred', k, c }); } catch (e) {} }
+  sfx('tick'); render();
+}
+function predictPanel(s) {
+  const A = s.players.A.name, B = s.players.B.name, k = s.games + ':' + s.round;
+  const mine = ui.pred && ui.pred.k === k ? ui.pred.c : null;
+  const bd = ui.board, me = peer && peer.id;
+  const myScore = bd && bd.list ? (bd.list.find(x => x.id === me) || { p: 0 }).p : 0;
+  const board = bd && bd.list && bd.list.length ? h('ol', { class: 'crowd' }, bd.list.slice(0, 5).map(x => h('li', { class: x.id === me ? 'me' : '' }, h('span', { class: 'cn', text: x.id === me ? 'You' : x.n }), h('span', { class: 'cp', text: String(x.p) })))) : null;
+  let head, body;
+  if (s.status === 'playing' && s.phase === 'choose') {
+    head = 'Who takes this round?';
+    const btn = (c, label) => h('button', { class: 'pred' + (mine === c ? ' on' : ''), type: 'button', 'aria-pressed': mine === c ? 'true' : 'false', onclick: () => predict(c), text: label });
+    body = [h('div', { class: 'predrow' }, btn('A', A), btn('D', 'Draw'), btn('B', B)), h('p', { class: 'note', text: mine ? 'Locked in. You can change your mind until the stat is played.' : 'Call it before the stat is played. 1 point for a round winner, 2 for a draw.' })];
+  } else if (s.phase === 'reveal' && s.pick) {
+    const res = s.pick.res === 'draw' ? 'D' : s.pick.res, ok = mine === res;
+    const t = bd && bd.tally && bd.tally.k === k ? bd.tally : null;
+    head = mine ? (ok ? 'You called it! +' + (res === 'D' ? 2 : 1) : 'Not this time') : 'Round called';
+    body = [t ? h('p', { class: 'note', text: 'The crowd said: ' + A + ' ' + t.A + ' · Draw ' + t.D + ' · ' + B + ' ' + t.B }) : null];
+  } else { head = 'Crowd predictions'; body = []; }
+  return h('div', { class: 'panel predict' }, h('div', { class: 'predhead' }, h('span', { class: 'lab', text: head }), h('span', { class: 'chip series', text: 'Your score ' + myScore })), body, board ? h('div', { class: 'lab', text: 'Crowd leaderboard' }) : null, board);
+}
+
+/* ---------- chat (two-player games and against the computer; lives outside the table so typing is never interrupted) ---------- */
 const chat = { open: false, msgs: [], unread: 0, built: false };
 function chatBuild() {
   if (chat.built) return; chat.built = true;
@@ -3087,22 +3445,26 @@ function chatAdd(m, quiet) {
   const l = document.getElementById('chatlog');
   if (l) { const atEnd = l.scrollTop + l.clientHeight >= l.scrollHeight - 40; l.append(chatLine(m)); if (atEnd || m.me) l.scrollTop = l.scrollHeight; }
   if (!m.me && !chat.open && !quiet) chat.unread += 1;
+  if (!m.me && !quiet) sfx('chat');
   chatSync();
 }
 function chatSend() {
   const i = document.getElementById('chatin'); if (!i) return;
   const text = i.value.trim().slice(0, 500);
-  if (!text || !dc || !dc.open) return;
+  if (!text) return;
+  if (!ui.solo && (!dc || !dc.open)) return;
   const me = ui.name ? cleanName(ui.name) : (ui.watch ? 'Spectator' : 'Player');
   try {
-    if (isHost()) chatFanout({ t: 'chat', text, from: me, spec: false }, null);
+    if (ui.solo) { /* the computer answers below */ }
+    else if (isHost()) chatFanout({ t: 'chat', text, from: me, spec: false }, null);
     else dc.send({ t: 'chat', text });             /* opponent or spectator: the host adds the name and relays */
   } catch (e) { return; }
   i.value = ''; chatAdd({ me: true, name: me, text });
+  if (ui.solo) aiReplyChat();
 }
 function chatReset() { chat.msgs = []; chat.unread = 0; chat.open = false; const l = document.getElementById('chatlog'); if (l) l.replaceChildren(); chatSync(); }
 function chatSync() {
-  const on = !!(G && !ui.solo && dc && side);
+  const on = !!(G && side && (ui.solo || dc));
   if (!on && !chat.built) return;
   chatBuild();
   const btn = document.getElementById('chatbtn'), panel = document.getElementById('chatpanel'), badge = document.getElementById('chatbadge');
@@ -3158,7 +3520,7 @@ function metrics(reveal) {
 function banner(s, meName, opName) {
   const me = side;
   if (s.phase === 'choose') {
-    if (s.chooser === me) return h('div', { class: 'banner' }, h('div', { class: 'kick', text: 'Round ' + s.round }), h('div', { class: 'big', text: 'Your pick' }), h('div', { class: 'note', text: 'Choose a stat from your top card.' }));
+    if (s.chooser === me) return h('div', { class: 'banner' }, h('div', { class: 'kick', text: 'Round ' + s.round }), h('div', { class: 'big', text: 'Your pick' }), h('div', { class: 'note', text: 'Choose a stat from your top card.' + (s.rule === 'low' ? ' The LOWEST value wins this game.' : '') }));
     return h('div', { class: 'banner' }, h('div', { class: 'kick', text: 'Round ' + s.round }), h('div', { class: 'big' }, opName + ' is choosing', h('span', { class: 'dots' })), h('div', { class: 'note', text: 'Study your card while you wait.' }));
   }
   const p = s.pick;
@@ -3231,12 +3593,12 @@ function table() {
   } else {
     actions = h('div', { class: 'actions' }, h('div', { class: 'wait', text: 'Waiting for ' + opName }));
   }
-  const series = (s.series.A || s.series.B) ? h('span', { class: 'chip series', text: 'Series ' + s.series[me] + '–' + s.series[op] }) : null;
+  const series = seriesChip(s, me);
   const foot = ui.confirmResign
-    ? h('div', { class: 'foot' }, h('span', { class: 'note', text: 'Give the game to ' + opName + '?' }), h('button', { class: 'btn small danger', type: 'button', onclick: resign, text: 'Yes, resign' }), h('button', { class: 'btn small ghost', type: 'button', onclick: () => { ui.confirmResign = false; render(); }, text: 'Keep playing' }))
+    ? h('div', { class: 'foot' }, h('span', { class: 'note', text: (isMatch(s) ? 'Forfeit the match to ' : 'Give the game to ') + opName + '?' }), h('button', { class: 'btn small danger', type: 'button', onclick: resign, text: 'Yes, resign' }), h('button', { class: 'btn small ghost', type: 'button', onclick: () => { ui.confirmResign = false; render(); }, text: 'Keep playing' }))
     : h('div', { class: 'foot' }, watchBtn(), h('button', { class: 'btn small ghost', type: 'button', onclick: () => { ui.confirmResign = true; render(); }, text: 'Resign' }));
   return h('div', null,
-    topbar([series, modeChip(), specChip(), h('span', { class: 'chip', text: ui.solo ? 'Vs computer' : 'Connected' })]),
+    topbar([series, modeChip(), rulesChip(), specChip(), h('span', { class: 'chip', text: ui.solo ? 'Vs computer' : 'Connected' })]),
     banner(s, meName, opName),
     pileStrip(s, meName, opName),
     h('div', { class: 'duel' }, seats),
@@ -3252,9 +3614,9 @@ function over() {
   const won = s.winner === me, tie = s.winner === 'draw';
   const headline = tie ? 'Dead heat' : (won ? 'You win' : opName + ' wins');
   const sub = tie ? 'Both hands ran out together.' : (s.reason === 'resigned' ? (won ? opName + ' resigned.' : 'You resigned.') : (won ? 'You took every card.' : opName + ' took every card.'));
-  const series = (s.series.A || s.series.B) ? h('span', { class: 'chip series', text: 'Series ' + s.series[me] + '–' + s.series[op] }) : null;
+  const series = seriesChip(s, me);
   const host = side === 'A';
-  return h('div', null, topbar([series, modeChip(), specChip(), h('span', { class: 'chip', text: ui.solo ? 'Vs computer' : 'Connected' })]),
+  return h('div', null, topbar([series, modeChip(), rulesChip(), specChip(), h('span', { class: 'chip', text: ui.solo ? 'Vs computer' : 'Connected' })]),
     h('div', { class: 'over' },
       h('div', { class: 'kick', text: 'Game over after ' + (s.round - 1) + ' rounds' }),
       h('div', { class: 'final ' + (tie ? '' : (won ? 'win' : 'lose')), text: headline }),
@@ -3280,6 +3642,43 @@ function cerBanners(id, xs, cols) {
       '<text x="38" y="106" text-anchor="middle" class="cers" fill="#D9B65A">1 · 2 · 3</text>' +
       '</g></g>';
   }).join('');
+}
+
+/* 5x7 pixel font, just the letters the exile line needs */
+const PXF = {
+  A: ['.###.', '#...#', '#...#', '#####', '#...#', '#...#', '#...#'], B: ['####.', '#...#', '#...#', '####.', '#...#', '#...#', '####.'],
+  C: ['.####', '#....', '#....', '#....', '#....', '#....', '.####'], E: ['#####', '#....', '#....', '####.', '#....', '#....', '#####'],
+  G: ['.####', '#....', '#....', '#..##', '#...#', '#...#', '.###.'], I: ['.###.', '..#..', '..#..', '..#..', '..#..', '..#..', '.###.'],
+  J: ['..###', '...#.', '...#.', '...#.', '...#.', '#..#.', '.##..'], L: ['#....', '#....', '#....', '#....', '#....', '#....', '#####'],
+  M: ['#...#', '##.##', '#.#.#', '#.#.#', '#...#', '#...#', '#...#'], N: ['#...#', '##..#', '#.#.#', '#..##', '#...#', '#...#', '#...#'],
+  O: ['.###.', '#...#', '#...#', '#...#', '#...#', '#...#', '.###.'], R: ['####.', '#...#', '#...#', '####.', '#.#..', '#..#.', '#...#'],
+  S: ['.####', '#....', '#....', '.###.', '....#', '....#', '####.'], U: ['#...#', '#...#', '#...#', '#...#', '#...#', '#...#', '.###.']
+};
+function pxText(lines, x, y, u, color) {
+  const cw = 6 * u, lh = 10 * u, widest = Math.max(...lines.map(l => l.length * cw - u));
+  let out = '', n = 0;
+  lines.forEach((line, li) => {
+    const lw = line.length * cw - u, x0 = x + Math.round((widest - lw) / u / 2) * u;
+    [...line].forEach((ch, ci) => {
+      const g = PXF[ch]; if (!g) return;
+      let d = '';
+      g.forEach((row, r) => { for (let c = 0; c < 5; c++) if (row[c] === '#') d += 'M' + (x0 + ci * cw + c * u) + ' ' + (y + li * lh + r * u) + 'h' + u + 'v' + u + 'h-' + u + 'z'; });
+      out += '<g class="px" style="--i:' + (n++) + '"><path d="' + d + '" fill="' + color + '"/></g>';
+    });
+  });
+  return { svg: out, w: widest, h: lines.length * lh - 3 * u, n };
+}
+function pxSpeech(lines, x, y, u) {
+  const t = pxText(lines, x + 4 * u, y + 4 * u, u, '#1B1B1B'), w = t.w + 8 * u, h = t.h + 8 * u;
+  const notch = (X, Y, W, H, k) => 'M' + (X + k) + ' ' + Y + 'H' + (X + W - k) + 'V' + (Y + k) + 'H' + (X + W) + 'V' + (Y + H - k) + 'H' + (X + W - k) + 'V' + (Y + H) + 'H' + (X + k) + 'V' + (Y + H - k) + 'H' + X + 'V' + (Y + k) + 'H' + (X + k) + 'Z';
+  const r = (c, y0, w0, col) => '<rect x="' + (x + c * u) + '" y="' + y0 + '" width="' + w0 * u + '" height="' + u + '" fill="' + col + '"/>';
+  const by = y + h;
+  return '<g class="speech" shape-rendering="crispEdges">' +
+    '<path d="' + notch(x + u, y + u, w, h, u) + '" fill="rgba(0,0,0,.38)"/>' +
+    '<path d="' + notch(x, y, w, h, u) + '" fill="#1B1B1B"/><path d="' + notch(x + u, y + u, w - 2 * u, h - 2 * u, u) + '" fill="#F7F3E4"/>' +
+    r(4, by, 6, '#1B1B1B') + r(3, by + u, 4, '#1B1B1B') + r(2, by + 2 * u, 2, '#1B1B1B') +
+    r(5, by - u, 4, '#F7F3E4') + r(5, by, 4, '#F7F3E4') + r(4, by + u, 2, '#F7F3E4') +
+    t.svg + '</g>';
 }
 function cerScene(kind, name) {
   const id = 'cer' + (++cerN), win = kind === 'win';
@@ -3311,19 +3710,14 @@ function cerScene(kind, name) {
     const door = '<g class="doorset"><rect x="440" y="92" width="170" height="288" fill="#2B1D14" stroke="#5A4030" stroke-width="6"/><rect x="448" y="100" width="154" height="280" fill="url(#' + id + 'out)"/><path class="beam" d="M448 380L602 380L560 250L490 250Z" fill="#E8F0F2" opacity=".18"/>' +
       '<g class="leaf"><rect x="448" y="100" width="154" height="280" fill="#4A3426" stroke="#2B1D14" stroke-width="3"/><rect x="462" y="116" width="58" height="104" fill="none" stroke="#3A281C" stroke-width="3"/><rect x="530" y="116" width="58" height="104" fill="none" stroke="#3A281C" stroke-width="3"/><rect x="462" y="236" width="126" height="128" fill="none" stroke="#3A281C" stroke-width="3"/><circle cx="578" cy="240" r="6" fill="#D9B65A"/></g>' +
       '<rect x="476" y="62" width="98" height="26" rx="3" fill="#1E5A36" stroke="#D9B65A" stroke-width="2"/><text x="525" y="81" text-anchor="middle" class="cert" fill="#EEE5CE" font-size="19">EXIT</text></g>';
-    const skin = '#E0B896', skl = '#A97F5A';
-    const arm = '<g class="arm"><path d="M216 266C258 244 304 224 340 213L351 247C314 262 274 290 232 308Z" fill="#E9CFA4" stroke="#B89B6C" stroke-width="3" stroke-linejoin="round"/><path d="M250 262C280 250 308 240 330 236" fill="none" stroke="#C9AE80" stroke-width="2"/>' +
-      '<path d="M338 210L362 205L372 246L348 252Z" fill="#F4F1E8" stroke="#9A9384" stroke-width="2.5" stroke-linejoin="round"/>' +
-      '<path d="M394 220L452 205" stroke="' + skl + '" stroke-width="15" stroke-linecap="round"/><path d="M394 220L452 205" stroke="' + skin + '" stroke-width="10" stroke-linecap="round"/>' +
-      '<ellipse cx="386" cy="230" rx="22" ry="19" fill="' + skin + '" stroke="' + skl + '" stroke-width="2.5" transform="rotate(-14 386 230)"/>' +
-      '<circle cx="380" cy="248" r="8" fill="' + skin + '" stroke="' + skl + '" stroke-width="2"/><circle cx="393" cy="246" r="8" fill="' + skin + '" stroke="' + skl + '" stroke-width="2"/><circle cx="371" cy="214" r="8" fill="' + skin + '" stroke="' + skl + '" stroke-width="2"/></g>';
+    const arm = pxSpeech(['GO JOIN A', 'BOOMER CLUB', 'LOSER'], 212, 90, 3);
     const stamp = '<g class="stamp"><g transform="translate(392 322) rotate(-10) scale(.78)"><rect x="-150" y="-44" width="300" height="88" rx="8" fill="rgba(20,10,8,.35)" stroke="#E4705A" stroke-width="7"/><rect x="-140" y="-34" width="280" height="68" rx="4" fill="none" stroke="#E4705A" stroke-width="2.5"/><text x="0" y="22" text-anchor="middle" class="cert" font-size="68" fill="#E4705A" letter-spacing="8">EXILED</text></g></g>';
     body = '<defs><linearGradient id="' + id + 'out" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B9C8CE"/><stop offset="1" stop-color="#6F8790"/></linearGradient></defs>' + door + bans +
       '<g class="sam sad"><image href="' + sam + '" x="8" y="98" width="288" height="302" preserveAspectRatio="xMidYMax meet"/></g>' + arm + player(356, 262, .82) + '<rect class="vig" width="640" height="400" fill="url(#' + id + 'vg)"/>' + stamp;
   }
   const vg = win ? '' : '<defs><radialGradient id="' + id + 'vg" cx=".5" cy=".5" r=".75"><stop offset=".5" stop-color="#7A1C10" stop-opacity="0"/><stop offset="1" stop-color="#7A1C10" stop-opacity=".45"/></radialGradient></defs>';
   const el = h('div', { class: 'cer ' + kind });
-  el.innerHTML = '<svg viewBox="0 0 640 400" role="img" aria-label="' + (win ? 'Sam hangs a medal around your neck while LHSC banners unfurl' : 'Sam points to the door and exiles you from the club') + '">' + defs + vg + base + body + '</svg>';
+  el.innerHTML = '<svg viewBox="0 0 640 400" role="img" aria-label="' + (win ? 'Sam hangs a medal around your neck while LHSC banners unfurl' : 'Sam says: Go join a boomer club loser, and throws you out of the club') + '">' + defs + vg + base + body + '</svg>';
   const nm = el.querySelector('.nm'); if (nm) nm.textContent = (name || 'You').toUpperCase();
   return el;
 }
@@ -3338,27 +3732,47 @@ const CER_LOSE = ['By order of the committee, {n}, your membership is revoked. O
 function over() {
   const s = G, me = side, op = other(me);
   const opName = s.players[op].name, myName = s.players[me].name;
-  const won = s.winner === me, tie = s.winner === 'draw';
+  const won = s.winner === me, tie = s.winner === 'draw', fin = isFinal(s), bo = isMatch(s);
   const resigned = s.reason === 'resigned';
-  const headline = tie ? 'Dead heat' : (won ? 'You win' : 'Exiled');
-  const sub = tie ? 'Both hands ran out together.' : (won ? (resigned ? opName + ' resigned.' : 'You took every card.') : (resigned ? 'You resigned, and Sam has revoked your membership anyway.' : 'Sam has revoked your membership. ' + opName + ' took every card.'));
-  const series = (s.series.A || s.series.B) ? h('span', { class: 'chip series', text: 'Series ' + s.series[me] + '–' + s.series[op] }) : null;
+  const mine = s.series[me], theirs = s.series[op];
   const host = side === 'A';
-  const scene = tie ? null : cerMount(won ? 'win' : 'lose', myName, cerKey(s));
-  const q = tie ? null : (won ? CER_WIN : CER_LOSE)[s.round % 3].replace('{n}', myName);
-  return h('div', null, topbar([series, h('span', { class: 'chip', text: ui.solo ? 'Vs computer' : 'Connected' })]),
-    h('div', { class: 'over' + (tie ? '' : ' cerover ' + (won ? 'win' : 'lose')), style: tie ? null : '--el:' + (-(performance.now() - ui.cerT0) / 1000).toFixed(2) + 's' },
-      scene,
+  const top = topbar([seriesChip(s, me), rulesChip(), h('span', { class: 'chip', text: ui.solo ? 'Vs computer' : 'Connected' })]);
+  const nextBtn = label => host ? h('button', { class: 'btn', type: 'button', disabled: ui.busy, onclick: rematch, text: label }) : h('div', { class: 'wait' }, 'Waiting for ' + s.players.A.name + ' to deal', h('span', { class: 'dots' }));
+  const leave = h('button', { class: 'btn ghost small', type: 'button', onclick: () => toLobby(''), text: 'Leave table' });
+  const errp = h('p', { class: 'err', role: 'status', 'aria-live': 'polite', text: ui.err });
+  if (tie) {
+    return h('div', null, top, h('div', { class: 'over' },
       h('div', { class: 'kick', text: 'Game over after ' + (s.round - 1) + ' rounds' }),
-      h('div', { class: 'final cerfinal ' + (tie ? '' : (won ? 'win' : 'lose')), text: headline }),
-      q ? h('p', { class: 'cerq' }, '“' + q + '” ', h('span', { text: '– Sam, Club Secretary' })) : null,
+      h('div', { class: 'final', text: 'Dead heat' }),
+      h('p', { class: 'note', text: 'Both hands ran out together.' + (bo ? ' No point to anyone, so it is replayed.' : '') }),
+      nextBtn(bo ? 'Replay the game' : 'Deal again'), leave, errp, history(s, opName)));
+  }
+  if (!fin) {                                              /* one game of a best-of series */
+    const need = targetWins(s);
+    return h('div', null, top, h('div', { class: 'over' },
+      h('div', { class: 'kick', text: 'Game ' + (mine + theirs) + ' done · ' + FORMATS[s.format].label }),
+      h('div', { class: 'final sm ' + (won ? 'win' : 'lose'), text: won ? 'Game won' : 'Game lost' }),
+      h('div', { class: 'bigscore', 'aria-label': 'Series ' + mine + ' to ' + theirs }, h('div', null, h('span', { class: 'n', text: String(mine) }), h('small', { text: 'You' })), h('i', { text: '–' }), h('div', null, h('span', { class: 'n', text: String(theirs) }), h('small', { text: opName }))),
+      h('p', { class: 'note', text: (won ? 'One for you. ' : opName + ' takes that one. ') + 'First to ' + need + ' wins the match.' }),
+      nextBtn('Next game'), leave, errp, history(s, opName)));
+  }
+  const scene = cerMount(won ? 'win' : 'lose', myName, cerKey(s));
+  const headline = won ? (bo ? 'Match won' : 'You win') : 'Exiled';
+  const sub = bo
+    ? (won ? (resigned ? opName + ' forfeited the match.' : 'You took the match ' + mine + '–' + theirs + '.') : (resigned ? 'You forfeited the match, and Sam has revoked your membership anyway.' : 'Sam has revoked your membership. ' + opName + ' took the match ' + theirs + '–' + mine + '.'))
+    : (won ? (resigned ? opName + ' resigned.' : 'You took every card.') : (resigned ? 'You resigned, and Sam has revoked your membership anyway.' : 'Sam has revoked your membership. ' + opName + ' took every card.'));
+  const q = (won ? CER_WIN : CER_LOSE)[s.round % 3].replace('{n}', myName);
+  return h('div', null, top,
+    h('div', { class: 'over cerover ' + (won ? 'win' : 'lose'), style: '--el:' + (-(performance.now() - ui.cerT0) / 1000).toFixed(2) + 's' },
+      scene,
+      h('div', { class: 'kick', text: bo ? 'Match over after ' + (mine + theirs) + ' games' : 'Game over after ' + (s.round - 1) + ' rounds' }),
+      h('div', { class: 'final cerfinal ' + (won ? 'win' : 'lose'), text: headline }),
+      h('p', { class: 'cerq' }, '“' + q + '” ', h('span', { text: '– Sam, Club Secretary' })),
       h('p', { class: 'note', text: sub }),
-      host ? h('button', { class: 'btn', type: 'button', disabled: ui.busy, onclick: rematch, text: 'Deal again' }) : h('div', { class: 'wait' }, 'Waiting for ' + s.players.A.name + ' to deal again', h('span', { class: 'dots' })),
-      h('button', { class: 'btn ghost small', type: 'button', onclick: () => toLobby(''), text: 'Leave table' }),
-      h('p', { class: 'err', role: 'status', 'aria-live': 'polite', text: ui.err }),
-      history(s, opName)));
+      nextBtn(bo ? 'New match' : 'Deal again'), leave, errp, history(s, opName)));
 }
 function devCer(kind) {
+  cerSfx(kind);
   const old = document.getElementById('cerprev'); if (old) old.remove();
   const close = () => { const o = document.getElementById('cerprev'); if (o) o.remove(); };
   const box = h('div', { id: 'cerprev', class: 'lightbox', role: 'dialog', 'aria-label': 'Preview', onclick: e => { if (e.target === e.currentTarget) close(); } },
@@ -3367,12 +3781,38 @@ function devCer(kind) {
   document.body.append(box);
 }
 
+function seg(cls, key, v, title, sub) {
+  const on = ui[key] === v;
+  return h('button', { class: 'seg' + (on ? ' on' : ''), type: 'button', role: 'radio', 'aria-checked': on ? 'true' : 'false', onclick: () => setOpt(key, v) }, h('b', { text: title }), sub ? h('span', { text: sub }) : null);
+}
 function modePick() {
-  const opt = (v, title, sub) => h('button', { class: 'seg' + (ui.mode === v ? ' on' : ''), type: 'button', role: 'radio', 'aria-checked': ui.mode === v ? 'true' : 'false', onclick: () => setMode(v) }, h('b', { text: title }), h('span', { text: sub }));
   return h('div', { class: 'field' }, h('span', { class: 'lab', id: 'modelab', text: 'Who picks the stat?' }),
     h('div', { class: 'segs2', role: 'radiogroup', 'aria-labelledby': 'modelab' },
-      opt('winner', 'Winner picks', 'Win a round and you choose next'),
-      opt('alternate', 'Take turns', 'The pick swaps every round')));
+      seg('', 'mode', 'winner', 'Winner picks', 'Win a round and you choose next'),
+      seg('', 'mode', 'alternate', 'Take turns', 'The pick swaps every round')));
+}
+function optsSummary() {
+  const p = [];
+  if (ui.rule === 'low') p.push('Lowest wins');
+  if (ui.size === 'quick') p.push('Quick');
+  if (ui.format !== 'single') p.push(FORMATS[ui.format].label);
+  return p.length ? p.join(' · ') : 'Standard rules';
+}
+function optionsPanel() {
+  return h('details', { class: 'opts', open: ui.opts ? true : null, ontoggle: e => { ui.opts = e.target.open; } },
+    h('summary', null, h('span', { text: 'Game options' }), h('em', { text: optsSummary() })),
+    h('div', { class: 'optsbody' },
+      h('div', { class: 'field' }, h('span', { class: 'lab', id: 'rulelab', text: 'Which value wins?' }),
+        h('div', { class: 'segs2', role: 'radiogroup', 'aria-labelledby': 'rulelab' }, seg('', 'rule', 'high', 'Highest wins', 'The usual rule'), seg('', 'rule', 'low', 'Lowest wins', 'Smallest number takes it'))),
+      h('div', { class: 'field' }, h('span', { class: 'lab', id: 'sizelab', text: 'Game length' }),
+        h('div', { class: 'segs2', role: 'radiogroup', 'aria-labelledby': 'sizelab' }, seg('', 'size', 'full', 'Full game', '12 cards each'), seg('', 'size', 'quick', 'Quick game', '6 cards each'))),
+      h('div', { class: 'field' }, h('span', { class: 'lab', id: 'fmtlab', text: 'Match' }),
+        h('div', { class: 'segs3', role: 'radiogroup', 'aria-labelledby': 'fmtlab' }, seg('', 'format', 'single', 'Single', 'One game'), seg('', 'format', 'bo3', 'Best of 3', 'First to 2'), seg('', 'format', 'bo5', 'Best of 5', 'First to 3')))));
+}
+function diffPick() {
+  return h('div', { class: 'field' }, h('span', { class: 'lab', id: 'difflab', text: 'Computer opponent' }),
+    h('div', { class: 'segs3', role: 'radiogroup', 'aria-labelledby': 'difflab' },
+      ['easy', 'normal', 'sneaky'].map(k => seg('', 'diff', k, k === 'easy' ? 'Easy' : k === 'normal' ? 'Normal' : 'Sneaky', PERSONAS[k].name))));
 }
 
 function lobby() {
@@ -3392,11 +3832,13 @@ function lobby() {
       h('div', { class: 'panel' },
         h('div', { class: 'field' }, h('label', { for: 'pname', text: 'Your name' }), nameIn),
         modePick(),
+        optionsPanel(),
+        diffPick(),
         h('button', { class: 'btn', type: 'button', onclick: () => startSolo(), text: 'Play the computer' }),
         h('button', { class: 'btn ghost', type: 'button', onclick: () => hostStart(0), text: 'Host a game for a friend' }),
         h('div', { class: 'or', text: 'or join a friend with a code' }),
         h('div', { class: 'joinrow' }, codeIn, h('button', { class: 'btn ghost', type: 'button', onclick: () => guestJoin(false), text: 'Join' }), h('button', { class: 'btn ghost', type: 'button', onclick: () => guestJoin(true), text: 'Watch' })),
-        h('p', { class: 'note', text: 'Join to play, or Watch to follow a game as a spectator. The host’s pick rule applies.' }),
+        h('p', { class: 'note', text: 'Join to play, or Watch to follow a game as a spectator. The host’s game options apply.' }),
         h('p', { class: 'err', role: 'status', 'aria-live': 'polite', text: ui.err }))));
 }
 
@@ -3474,23 +3916,28 @@ function specTable() {
   const cls = k => reveal && p.res !== 'draw' ? (p.res === k ? 'win' : 'lose') : '';
   const seat = (k, name) => h('div', { class: 'seat' }, h('div', { class: 'tag', text: name + (!reveal && s.chooser === k ? ' · picking' : '') }),
     slot(cardEl(CARDS[s.hands[k][0]], reveal ? { hi: p.stat } : {}), sc, cls(k) + (reveal && fresh ? ' flipin' : '')));
-  const series = (s.series.A || s.series.B) ? h('span', { class: 'chip series', text: 'Series ' + s.series.A + '–' + s.series.B }) : null;
+  const series = seriesChip(s, 'A');
   return h('div', null,
-    topbar([series, modeChip(), specChip(), h('span', { class: 'chip', text: 'Watching' })]),
+    topbar([series, modeChip(), rulesChip(), specChip(), h('span', { class: 'chip', text: 'Watching' })]),
     specBanner(s), pileStrip(s, A, B),
     h('div', { class: 'duel' }, seat('A', A), seat('B', B)),
+    predictPanel(s), reactBar(),
     h('div', { class: 'foot' }, h('button', { class: 'btn small ghost', type: 'button', onclick: () => toLobby(''), text: 'Stop watching' })));
 }
 function specOver() {
   const s = G;
-  const tie = s.winner === 'draw';
+  const tie = s.winner === 'draw', fin = isFinal(s);
   const wn = tie ? '' : s.players[s.winner].name, ln = tie ? '' : s.players[other(s.winner)].name;
-  const series = (s.series.A || s.series.B) ? h('span', { class: 'chip series', text: 'Series ' + s.series.A + '–' + s.series.B }) : null;
-  return h('div', null, topbar([series, modeChip(), specChip(), h('span', { class: 'chip', text: 'Watching' })]),
+  const series = seriesChip(s, 'A');
+  const head = tie ? 'Dead heat' : (fin ? wn + ' wins' : wn + ' takes the game');
+  const kick = fin ? (isMatch(s) ? 'Match over' : 'Game over after ' + (s.round - 1) + ' rounds') : 'Game over · ' + (isMatch(s) ? FORMATS[s.format].label : 'Single game');
+  const note = tie ? 'Both hands ran out together.' : (s.reason === 'resigned' ? ln + ' resigned' + (isMatch(s) ? ' the match.' : '.') : (fin ? (isMatch(s) ? wn + ' took the match ' + s.series[s.winner] + '–' + s.series[other(s.winner)] + '.' : wn + ' took every card.') : 'Series ' + s.series.A + '–' + s.series.B + '. First to ' + targetWins(s) + ' takes the match.'));
+  return h('div', null, topbar([series, modeChip(), rulesChip(), specChip(), h('span', { class: 'chip', text: 'Watching' })]),
     h('div', { class: 'over' },
-      h('div', { class: 'kick', text: 'Game over after ' + (s.round - 1) + ' rounds' }),
-      h('div', { class: 'final ' + (tie ? '' : 'win'), text: tie ? 'Dead heat' : wn + ' wins' }),
-      h('p', { class: 'note', text: tie ? 'Both hands ran out together.' : (s.reason === 'resigned' ? ln + ' resigned.' : wn + ' took every card.') }),
+      h('div', { class: 'kick', text: kick }),
+      h('div', { class: 'final ' + (tie ? '' : 'win') + (fin || tie ? '' : ' sm'), text: head }),
+      h('p', { class: 'note', text: note }),
+      predictPanel(s), reactBar(),
       h('div', { class: 'wait' }, 'Waiting to see if they play again', h('span', { class: 'dots' })),
       h('button', { class: 'btn ghost small', type: 'button', onclick: () => toLobby(''), text: 'Stop watching' })));
 }
@@ -3525,6 +3972,7 @@ function showEgg(kind, o) {
   img.removeAttribute('src'); img.src = EGG[kind];                         /* restarts the animation */
   el.setAttribute('aria-label', 'Pixel art animation: ' + r.title);
   el.hidden = false; clearTimeout(eggTimer);
+  eggSfx(kind);
   if (!o.hold) eggTimer = setTimeout(hideEgg, r.ms);
 }
 function eggCheck() {
@@ -3563,7 +4011,8 @@ function devPlay() {
   const d = ui.dv, rest = shuffle(CARDS.map((_, i) => i).filter(i => i !== d.a && i !== d.b));
   startSolo();
   const g = clone(G);
-  g.hands = { A: [d.a, ...rest.slice(0, 11)], B: [d.b, ...rest.slice(11, 22)] };
+  const per = g.size === 'quick' ? 6 : 12;
+  g.hands = { A: [d.a, ...rest.slice(0, per - 1)], B: [d.b, ...rest.slice(per - 1, 2 * per - 2)] };
   g.pot = []; g.chooser = 'A'; g.phase = 'choose'; g.pick = null;
   ui.devOpen = false; hideEgg(); write(g);
 }
@@ -3602,6 +4051,7 @@ function devScreen() {
       h('button', { class: 'btn', type: 'button', onclick: devReveal, text: 'Reveal' }),
       d.state ? devStage(d.state) : h('p', { class: 'note', text: 'Pick two cards and a stat, then press Reveal. The matching animation plays if the rules fire.' })),
     h('div', { class: 'panel' }, h('h2', { class: 'devh', text: 'Easter eggs' }), h('div', { class: 'deveggs' }, eggs)),
+    h('div', { class: 'panel' }, h('h2', { class: 'devh', text: 'Sounds' }), h('p', { class: 'note', text: snd.on ? 'Tap to hear each effect.' : 'Sound is off. Use the speaker button at the bottom left to turn it on.' }), h('div', { class: 'row sfxrow' }, Object.keys(SFX).map(k => h('button', { class: 'btn small ghost', type: 'button', onclick: () => sfx(k), text: k })))),
     h('div', { class: 'panel' }, h('h2', { class: 'devh', text: 'Result screens' }), h('p', { class: 'note', text: 'Preview the end-of-game scenes without playing a whole game.' }), h('div', { class: 'row' }, h('button', { class: 'btn small', type: 'button', onclick: () => devCer('win'), text: 'Medal ceremony' }), h('button', { class: 'btn small', type: 'button', onclick: () => devCer('lose'), text: 'Exile' }))),
     h('div', { class: 'panel' }, h('h2', { class: 'devh', text: 'Play from here' }),
       h('p', { class: 'note', text: 'Start a game against the computer with these two cards on top. In-game, the DEV button shows the game state and lets you force the next result.' }),
@@ -3644,7 +4094,7 @@ function render() {
   app.replaceChildren(view);
   document.querySelectorAll('body > .toast').forEach(el => el.remove());
   if (ui.toast) document.body.append(h('div', { class: 'toast', role: 'status', text: ui.toast }));
-  chatSync(); eggCheck(); devSync();
+  chatSync(); eggCheck(); devSync(); sfxCheck(); aiWatch(); sndSync();
   if (keep) { const el = document.getElementById(keep.id); if (el) { el.focus(); try { el.setSelectionRange(keep.s, keep.e); } catch (e) {} } }
 }
 
