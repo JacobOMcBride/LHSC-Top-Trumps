@@ -311,9 +311,9 @@ input.codein:focus-visible { outline: 2px solid var(--brass); outline-offset: 1p
 .codebox { flex: 1 0 100%; display: grid; justify-items: center; gap: 2px; padding: 10px 14px; margin-bottom: 4px; border: 1.5px dashed var(--brass); border-radius: 6px; background: rgba(217,182,90,.07); }
 .codelab { font-family: var(--f-ui); font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--chalk-dim); text-align: center; }
 .codebig { font-family: var(--f-ui); font-weight: 800; font-size: 44px; line-height: 1.05; letter-spacing: .3em; padding-left: .3em; color: var(--brass); user-select: all; }
-.modbtn { position: fixed; z-index: 19; left: max(14px, env(safe-area-inset-left, 0px)); bottom: max(66px, calc(env(safe-area-inset-bottom, 0px) + 62px)); appearance: none; cursor: pointer; padding: 8px 13px; border-radius: 20px; border: 1.5px solid #5CFF8A; background: #07120B; color: #5CFF8A; font-family: var(--f-ui); font-weight: 800; font-size: 14px; letter-spacing: .14em; box-shadow: 0 0 14px rgba(92,255,138,.25); }
+.modbtn { position: fixed; z-index: 19; left: calc(max(14px, env(safe-area-inset-left, 0px)) + 54px); bottom: max(19px, calc(env(safe-area-inset-bottom, 0px) + 19px)); appearance: none; cursor: pointer; padding: 8px 13px; border-radius: 20px; border: 1.5px solid #5CFF8A; background: #07120B; color: #5CFF8A; font-family: var(--f-ui); font-weight: 800; font-size: 14px; letter-spacing: .14em; box-shadow: 0 0 14px rgba(92,255,138,.25); }
 .modbtn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
-.modpanel { position: fixed; z-index: 19; left: max(12px, env(safe-area-inset-left, 0px)); bottom: max(112px, calc(env(safe-area-inset-bottom, 0px) + 108px)); width: min(410px, calc(100vw - 24px)); max-height: min(72vh, calc(100vh - 140px)); display: grid; grid-template-rows: auto minmax(0, 1fr); background: #07120B; border: 1.5px solid #5CFF8A; border-radius: 8px; box-shadow: 0 14px 40px rgba(0,0,0,.65), 0 0 24px rgba(92,255,138,.18); overflow: hidden; }
+.modpanel { position: fixed; z-index: 19; left: max(12px, env(safe-area-inset-left, 0px)); bottom: max(140px, calc(env(safe-area-inset-bottom, 0px) + 136px)); width: min(410px, calc(100vw - 24px)); max-height: min(70vh, calc(100vh - 170px)); display: grid; grid-template-rows: auto minmax(0, 1fr); background: #07120B; border: 1.5px solid #5CFF8A; border-radius: 8px; box-shadow: 0 14px 40px rgba(0,0,0,.65), 0 0 24px rgba(92,255,138,.18); overflow: hidden; }
 .modhead { color: #5CFF8A; }
 .modbody { overflow-y: auto; padding: 12px 14px 16px; display: grid; gap: 16px; align-content: start; }
 .modsec { display: grid; gap: 8px; }
@@ -3072,7 +3072,13 @@ async function copyFrom(id, msg) {
 function hashJoin() {
   if (G || ui.net) return;
   const m = /join=([A-Za-z0-9]{4})/.exec(location.hash || '');
-  if (m) { ui.code = cleanCode(m[1]); setTimeout(() => guestJoin(false), 0); return; }
+  if (m) {
+    ui.code = cleanCode(m[1]);
+    if (sget('lhsc.tt.name')) { setTimeout(() => guestJoin(false), 0); return; }          /* a known player joins straight away */
+    say('You are joining game ' + ui.code + '. Enter your name, then press Join.');       /* a new device gets to type its name first */
+    setTimeout(() => { render(); const n = document.getElementById('pname'); if (n) n.focus(); }, 0);
+    return;
+  }
   const w = /watch=([A-Za-z0-9]{4})/.exec(location.hash || '');
   if (w) { ui.code = cleanCode(w[1]); setTimeout(() => guestJoin(true), 0); }
 }
@@ -3854,7 +3860,7 @@ function table() {
   const series = seriesChip(s, me);
   const foot = ui.confirmResign
     ? h('div', { class: 'foot' }, h('span', { class: 'note', text: (isMatch(s) ? 'Forfeit the match to ' : 'Give the game to ') + opName + '?' }), h('button', { class: 'btn small danger', type: 'button', onclick: resign, text: 'Yes, resign' }), h('button', { class: 'btn small ghost', type: 'button', onclick: () => { ui.confirmResign = false; render(); }, text: 'Keep playing' }))
-    : h('div', { class: 'foot' }, codeBox(), handBtn(), switchBtn(), watchBtn(), talkBtn(), h('button', { class: 'btn small ghost', type: 'button', onclick: () => { ui.confirmResign = true; render(); }, text: 'Resign' }));
+    : h('div', { class: 'foot' }, handBtn(), switchBtn(), watchBtn(), talkBtn(), h('button', { class: 'btn small ghost', type: 'button', onclick: () => { ui.confirmResign = true; render(); }, text: 'Resign' }));
   return h('div', null,
     topbar([series, codeChip(), modeChip(), rulesChip(), specChip(), h('span', { class: 'chip', text: ui.solo ? 'Vs computer' : 'Connected' })]),
     banner(s, meName, opName),
@@ -4089,7 +4095,7 @@ function diffPick() {
 }
 
 function lobby() {
-  const nameIn = h('input', { type: 'text', id: 'pname', maxlength: '16', placeholder: 'Your name', value: ui.name, autocomplete: 'nickname', oninput: e => { ui.name = e.target.value; }, onchange: e => { const a = aliasName(e.target.value); if (a !== e.target.value.trim()) { e.target.value = a; ui.name = a; } } });
+  const nameIn = h('input', { type: 'text', id: 'pname', maxlength: '16', placeholder: 'Your name', value: ui.name, autocomplete: 'nickname', oninput: e => { ui.name = e.target.value; }, onchange: e => { const a = aliasName(e.target.value); if (a !== e.target.value.trim()) { e.target.value = a; ui.name = a; } if (e.target.value.trim()) sset('lhsc.tt.name', cleanName(e.target.value)); } });
   const codeIn = h('input', { type: 'text', id: 'jcode', class: 'codein', maxlength: '4', placeholder: 'CODE', value: ui.code, autocomplete: 'off', autocapitalize: 'characters', spellcheck: 'false', 'aria-label': 'Game code',
     oninput: e => { const v = cleanCode(e.target.value); e.target.value = v; ui.code = v; },
     onkeydown: e => { if (e.key === 'Enter') guestJoin(false); } });
@@ -4194,7 +4200,7 @@ function specTable() {
     specBanner(s), pileStrip(s, A, B),
     h('div', { class: 'duel' }, seat('A', A), seat('B', B)),
     predictPanel(s), reactBar(),
-    h('div', { class: 'foot' }, codeBox(), h('button', { class: 'btn small ghost', type: 'button', onclick: () => toLobby(''), text: 'Stop watching' })));
+    h('div', { class: 'foot' }, h('button', { class: 'btn small ghost', type: 'button', onclick: () => toLobby(''), text: 'Stop watching' })));
 }
 function specOver() {
   const s = G;
@@ -4211,7 +4217,6 @@ function specOver() {
       h('p', { class: 'note', text: note }),
       predictPanel(s), reactBar(),
       h('div', { class: 'wait' }, 'Waiting to see if they play again', h('span', { class: 'dots' })),
-      codeBox(),
       h('button', { class: 'btn ghost small', type: 'button', onclick: () => toLobby(''), text: 'Stop watching' })));
 }
 
