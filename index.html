@@ -2901,7 +2901,7 @@ function qrImg(text) {
    iceServers list and paste the entries between the brackets below, e.g.
    { urls: 'turn:global.relay.metered.ca:80', username: '...', credential: '...' },
    { urls: 'turns:global.relay.metered.ca:443?transport=tcp', username: '...', credential: '...' } */
-const BUILD = '27 Nov 18:43';
+const BUILD = '27 Nov 18:50';
 const EXTRA_TURN = [
   { urls: 'stun:stun.relay.metered.ca:80' },
   { urls: 'turn:global.relay.metered.ca:80', username: '3cbb62a53aabc5089ff27a05', credential: '5O6QjK+NPVPmtSAJ' },
@@ -2933,18 +2933,27 @@ function closePeer() {
 /* what the connection managed to find, so a failure can be explained (shown under the error message) */
 /* "Test my connection": asks this phone whether it can see its own address and reach the relay */
 async function connTest() {
-  ui.test = 'Testing for up to 10 seconds…'; render();
-  const found = {}, errs = [];
-  try {
-    const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
-    pc.createDataChannel('t');
-    pc.addEventListener('icecandidate', e => { if (e.candidate) { const m = /typ (\w+)/.exec(e.candidate.candidate || ''); const t = e.candidate.type || (m && m[1]) || '?'; found[t] = (found[t] || 0) + 1; } });
-    pc.addEventListener('icecandidateerror', e => { const u = String(e.url || '').replace(/^[a-z]+:/, '').split('?')[0]; { const x = e.errorCode + (u ? ' ' + u : ''); if (errs.length < 10 && !errs.includes(x)) errs.push(x); } });
-    await pc.setLocalDescription(await pc.createOffer());
-    await new Promise(r => { const t = setTimeout(r, 10000); pc.addEventListener('icegatheringstatechange', () => { if (pc.iceGatheringState === 'complete') { clearTimeout(t); r(); } }); });
-    pc.close();
-  } catch (e) { errs.push(String(e && e.message || e).slice(0, 60)); }
-  ui.test = 'Direct: ' + (found.host ? 'yes' : 'no') + ' · Internet address: ' + (found.srflx ? 'yes' : 'no') + ' · Relay: ' + (found.relay ? 'WORKING' : 'NOT REACHED') + (errs.length ? ' · errors: ' + errs.join('; ') : '') + ' · Version ' + BUILD;
+  ui.test = 'Testing each relay route for up to 9 seconds…'; render();
+  /* every relay address is tried on its own, forcing relay-only, so we learn which routes this phone/network can use */
+  const routes = [];
+  ICE_SERVERS.forEach(sv => [].concat(sv.urls).forEach(u => { if (/^turns?:/.test(u)) routes.push({ url: u, sv: { urls: u, username: sv.username, credential: sv.credential } }); }));
+  const one = r => new Promise(done => {
+    let pc, out = { url: r.url, ok: false, err: '' }, fin = false;
+    const end = () => { if (fin) return; fin = true; try { pc.close(); } catch (e) {} done(out); };
+    try {
+      pc = new RTCPeerConnection({ iceServers: [r.sv], iceTransportPolicy: 'relay' });
+      pc.createDataChannel('t');
+      pc.addEventListener('icecandidate', e => { if (e.candidate && /typ relay/.test(e.candidate.candidate || '')) { out.ok = true; end(); } });
+      pc.addEventListener('icecandidateerror', e => { out.err = String(e.errorCode); setTimeout(end, 300); });
+      pc.addEventListener('icegatheringstatechange', () => { if (pc.iceGatheringState === 'complete') setTimeout(end, 300); });
+      pc.createOffer().then(o => pc.setLocalDescription(o)).catch(e => { out.err = 'offer'; end(); });
+      setTimeout(() => { if (!out.ok && !out.err) out.err = 'no reply'; end(); }, 9000);
+    } catch (e) { out.err = 'error'; end(); }
+  });
+  const res = await Promise.all(routes.map(one));
+  const label = u => u.replace(/^turns:/, 'TLS ').replace(/^turn:/, '').replace('global.relay.metered.ca', 'metered').replace('.turn.peerjs.com', ' peerjs').replace('?transport=tcp', ' TCP');
+  const anyOk = res.some(x => x.ok);
+  ui.test = 'Relay routes on this connection:\n' + res.map(x => (x.ok ? '✓ ' : '✗ ') + label(x.url) + (x.ok ? '' : ' (' + x.err + ')')).join('\n') + '\n' + (anyOk ? 'A relay works, so this phone can use it.' : 'No relay route works here.') + ' · Version ' + BUILD;
   render();
 }
 let iceDiag = null;
@@ -4369,7 +4378,7 @@ function lobby() {
         h('div', { class: 'or', text: 'or join a friend with a code' }),
         h('div', { class: 'joinrow' }, codeIn, h('button', { class: 'btn ghost', type: 'button', onclick: () => guestJoin(false), text: 'Join' }), h('button', { class: 'btn ghost', type: 'button', onclick: () => guestJoin(true), text: 'Watch' })),
         h('p', { class: 'note', text: 'Join to play, or Watch to follow a game as a spectator. The host’s game options apply.' }),
-        h('p', { class: 'err', role: 'status', 'aria-live': 'polite', text: ui.err }), h('p', { class: 'note', style: 'opacity:.55;font-size:11px' }, 'Version ' + BUILD + ' · ', h('a', { href: '#', onclick: ev => { ev.preventDefault(); connTest(); }, text: 'Test my connection' })), ui.test ? h('p', { class: 'note', style: 'font-size:12px;word-break:break-word', text: ui.test }) : null)));
+        h('p', { class: 'err', role: 'status', 'aria-live': 'polite', text: ui.err }), h('p', { class: 'note', style: 'opacity:.55;font-size:11px' }, 'Version ' + BUILD + ' · ', h('a', { href: '#', onclick: ev => { ev.preventDefault(); connTest(); }, text: 'Test my connection' })), ui.test ? h('p', { class: 'note', style: 'font-size:12px;word-break:break-word;white-space:pre-wrap', text: ui.test }) : null)));
 }
 
 function cardsScreen() {
