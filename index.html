@@ -2901,7 +2901,7 @@ function qrImg(text) {
    iceServers list and paste the entries between the brackets below, e.g.
    { urls: 'turn:global.relay.metered.ca:80', username: '...', credential: '...' },
    { urls: 'turns:global.relay.metered.ca:443?transport=tcp', username: '...', credential: '...' } */
-const BUILD = '27 Nov 18:30';
+const BUILD = '27 Nov 18:43';
 const EXTRA_TURN = [
   { urls: 'stun:stun.relay.metered.ca:80' },
   { urls: 'turn:global.relay.metered.ca:80', username: '3cbb62a53aabc5089ff27a05', credential: '5O6QjK+NPVPmtSAJ' },
@@ -2931,18 +2931,35 @@ function closePeer() {
   setTimeout(() => { try { if (d) d.close(); } catch (e) {} sp.forEach(c => { try { c.close(); } catch (e) {} }); try { if (p) p.destroy(); } catch (e) {} }, 250);
 }
 /* what the connection managed to find, so a failure can be explained (shown under the error message) */
+/* "Test my connection": asks this phone whether it can see its own address and reach the relay */
+async function connTest() {
+  ui.test = 'Testing for up to 10 seconds…'; render();
+  const found = {}, errs = [];
+  try {
+    const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+    pc.createDataChannel('t');
+    pc.addEventListener('icecandidate', e => { if (e.candidate) { const m = /typ (\w+)/.exec(e.candidate.candidate || ''); const t = e.candidate.type || (m && m[1]) || '?'; found[t] = (found[t] || 0) + 1; } });
+    pc.addEventListener('icecandidateerror', e => { const u = String(e.url || '').replace(/^[a-z]+:/, '').split('?')[0]; { const x = e.errorCode + (u ? ' ' + u : ''); if (errs.length < 10 && !errs.includes(x)) errs.push(x); } });
+    await pc.setLocalDescription(await pc.createOffer());
+    await new Promise(r => { const t = setTimeout(r, 10000); pc.addEventListener('icegatheringstatechange', () => { if (pc.iceGatheringState === 'complete') { clearTimeout(t); r(); } }); });
+    pc.close();
+  } catch (e) { errs.push(String(e && e.message || e).slice(0, 60)); }
+  ui.test = 'Direct: ' + (found.host ? 'yes' : 'no') + ' · Internet address: ' + (found.srflx ? 'yes' : 'no') + ' · Relay: ' + (found.relay ? 'WORKING' : 'NOT REACHED') + (errs.length ? ' · errors: ' + errs.join('; ') : '') + ' · Version ' + BUILD;
+  render();
+}
 let iceDiag = null;
 function diagHook(pc) {
   if (!pc || pc.__lhscDiag) return; pc.__lhscDiag = true;
   const d = iceDiag = { found: {}, errs: [], st: '' };
   pc.addEventListener('icecandidate', e => { if (e.candidate) { const m = /typ (\w+)/.exec(e.candidate.candidate || ''); const t = e.candidate.type || (m && m[1]) || '?'; d.found[t] = 1; } });
-  pc.addEventListener('icecandidateerror', e => { const u = String(e.url || '').replace(/^[a-z]+:/, '').split('?')[0]; if (d.errs.length < 4) d.errs.push(e.errorCode + (u ? ' ' + u : '')); });
+  pc.addEventListener('icecandidateerror', e => { const u = String(e.url || '').replace(/^[a-z]+:/, '').split('?')[0]; { const x = e.errorCode + (u ? ' ' + u : ''); if (d.errs.length < 10 && !d.errs.includes(x)) d.errs.push(x); } });
   pc.addEventListener('iceconnectionstatechange', () => { d.st = pc.iceConnectionState; });
+  pc.addEventListener('icegatheringstatechange', () => { d.gather = pc.iceGatheringState; });
 }
 function diagText() {
   const d = iceDiag; if (!d) return 'Version ' + BUILD;
   const f = Object.keys(d.found).join(', ') || 'nothing';
-  return 'Details: found ' + f + (d.errs.length ? ' · relay errors ' + d.errs.join('; ') : '') + (d.st ? ' · link ' + d.st : '') + ' · Version ' + BUILD;
+  return 'Details: found ' + f + (d.errs.length ? ' · relay errors ' + d.errs.join('; ') : '') + (Object.keys(d.found).includes('relay') ? '' : ' · no relay found') + (d.st ? ' · link ' + d.st : '') + (lastWhy ? ' · ended: ' + lastWhy : '') + (d.gather ? ' · gathering ' + d.gather : '') + ' · as ' + (ui.net ? ui.net.role : '?') + ' · Version ' + BUILD;
 }
 function lost() {
   if (!G && !ui.net) return;
@@ -2952,8 +2969,10 @@ function lost() {
 }
 /* a drop in the middle of a game is not the end: keep the table, and keep trying to rejoin for 90 seconds */
 let reco = null, recoTimer = 0, sigTimer = 0;
-function linkDown(conn) {
+let lastWhy = '';
+function linkDown(conn, why) {
   if (dc !== conn) return;
+  lastWhy = why || '';
   if (!G || ui.solo) { lost(); return; }
   if (reco) return;
   clearInterval(beat);
@@ -3002,10 +3021,10 @@ function linkCheck() {
   if (!G || ui.solo || !dc) return;
   if (peer && peer.disconnected && !peer.destroyed) { try { peer.reconnect(); } catch (e) {} }
   if (reco) return;
-  if (!dc.open) { linkDown(dc); return; }
+  if (!dc.open) { linkDown(dc, 'closed'); return; }
   const t = Date.now(), c = dc;
-  try { dc.send({ t: 'ping' }); } catch (e) { linkDown(dc); return; }
-  setTimeout(() => { if (G && dc === c && lastRx < t && !reco) linkDown(c); }, 9000);
+  try { dc.send({ t: 'ping' }); } catch (e) { linkDown(dc, 'send failed'); return; }
+  setTimeout(() => { if (G && dc === c && lastRx < t && !reco) linkDown(c, 'no reply'); }, 9000);
 }
 document.addEventListener('visibilitychange', linkCheck);
 addEventListener('pageshow', linkCheck);
@@ -3017,7 +3036,7 @@ function startBeat(conn) {
     if (dc !== conn) { clearInterval(beat); return; }
     try { if (conn.open) conn.send({ t: 'ping' }); } catch (e) {}
     /* generous: browsers slow timers right down in background tabs */
-    if (Date.now() - lastRx > (document.hidden ? 120000 : 30000)) { clearInterval(beat); linkDown(conn); }
+    if (Date.now() - lastRx > (document.hidden ? 120000 : 30000)) { clearInterval(beat); linkDown(conn, 'silent'); }
   }, 5000);
 }
 function wireChannel(conn) {
@@ -3046,16 +3065,16 @@ function wireChannel(conn) {
     const pc = conn.peerConnection; if (!pc || pc.__lhscWatch) return; pc.__lhscWatch = true; diagHook(pc);
     pc.addEventListener('iceconnectionstatechange', () => {
       const st = pc.iceConnectionState; clearTimeout(dropTimer);
-      if (st === 'failed' || st === 'closed') { if (dc === conn) linkDown(conn); }
-      else if (st === 'disconnected') dropTimer = setTimeout(() => { if (dc === conn) linkDown(conn); }, 12000);
+      if (st === 'failed' || st === 'closed') { if (dc === conn) linkDown(conn, 'ice ' + st); }
+      else if (st === 'disconnected') dropTimer = setTimeout(() => { if (dc === conn) linkDown(conn, 'ice lost'); }, G ? 12000 : 30000);
     });
   };
   watch(); conn.on('open', watch);
   conn.on('data', m => {
     lastRx = Date.now();
     if (!m || typeof m !== 'object' || m.t === 'ping') return;
-    if (m.t === 'bye') { if (dc === conn) linkDown(conn); return; }
-    if (m.t === 'leave') { if (dc === conn) lost(); return; }
+    if (m.t === 'bye') { if (dc === conn) linkDown(conn, 'bye'); return; }
+    if (m.t === 'leave') { if (dc === conn) { lastWhy = 'other side left'; lost(); } return; }
     if (m.t === 'hello' && m.tok) ui.gTok = String(m.tok).slice(0, 40);
     if (m.t === 'chat') { chatFromPlayerLink(m); return; }
     if (m.t === 'react') { reactShow(m.e, String(m.from || '').slice(0, 16)); return; }
@@ -3073,8 +3092,8 @@ function wireChannel(conn) {
       render();
     }
   });
-  conn.on('close', () => { if (dc === conn) linkDown(conn); });
-  conn.on('error', () => { if (dc === conn) linkDown(conn); });
+  conn.on('close', () => { if (dc === conn) linkDown(conn, 'closed'); });
+  conn.on('error', e => { if (dc === conn) linkDown(conn, 'error ' + ((e && (e.type || e.message)) || '')); });
   if (conn.open) onOpen();
 }
 addEventListener('pagehide', e => { const t = e && e.persisted ? 'bye' : 'leave'; try { if (dc && dc.open) dc.send({ t }); specs.forEach(c => { if (c.open) c.send({ t }); }); } catch (x) {} });
@@ -3267,7 +3286,7 @@ function wireWatcher(conn) {
     lastRx = Date.now();
     if (!m || typeof m !== 'object' || m.t === 'ping') return;
     if (m.t === 'wait') { if (ui.net) { ui.net.hostReady = true; render(); } return; }
-    if (m.t === 'bye') { if (dc === conn) linkDown(conn); return; }
+    if (m.t === 'bye') { if (dc === conn) linkDown(conn, 'bye'); return; }
     if (m.t === 'leave') { if (dc === conn) toLobby('The host left, so the game ended.'); return; }
     if (m.t === 'full') { toLobby('That game already has the maximum number of spectators.'); return; }
     if (m.t === 'chat') { chatAdd({ me: false, name: String(m.from || 'Someone').slice(0, 16), spec: !!m.spec, text: String(m.text == null ? '' : m.text).slice(0, 500) }); return; }
@@ -3275,9 +3294,9 @@ function wireWatcher(conn) {
     if (m.t === 'react') { reactShow(m.e, String(m.from || '').slice(0, 16)); return; }
     if (m.t === 'state' && m.s && m.s.hands && m.s.players) { if (typeof m.w === 'number') ui.specN = m.w; if (m.b) ui.board = m.b; G = m.s; side = 'A'; ui.net = null; render(); }
   });
-  conn.on('close', () => { if (dc === conn) linkDown(conn); });
-  conn.on('error', () => { if (dc === conn) linkDown(conn); });
-  watchIce(conn, () => { if (dc === conn) linkDown(conn); });
+  conn.on('close', () => { if (dc === conn) linkDown(conn, 'closed'); });
+  conn.on('error', e => { if (dc === conn) linkDown(conn, 'error ' + ((e && (e.type || e.message)) || '')); });
+  watchIce(conn, () => { if (dc === conn) linkDown(conn, 'ice failed'); });
   if (conn.open) onOpen();
 }
 const gameCode = () => ui.solo ? '' : (ui.hostCode || ui.joinCode || '');
@@ -4350,7 +4369,7 @@ function lobby() {
         h('div', { class: 'or', text: 'or join a friend with a code' }),
         h('div', { class: 'joinrow' }, codeIn, h('button', { class: 'btn ghost', type: 'button', onclick: () => guestJoin(false), text: 'Join' }), h('button', { class: 'btn ghost', type: 'button', onclick: () => guestJoin(true), text: 'Watch' })),
         h('p', { class: 'note', text: 'Join to play, or Watch to follow a game as a spectator. The host’s game options apply.' }),
-        h('p', { class: 'err', role: 'status', 'aria-live': 'polite', text: ui.err }), h('p', { class: 'note', style: 'opacity:.55;font-size:11px', text: 'Version ' + BUILD }))));
+        h('p', { class: 'err', role: 'status', 'aria-live': 'polite', text: ui.err }), h('p', { class: 'note', style: 'opacity:.55;font-size:11px' }, 'Version ' + BUILD + ' · ', h('a', { href: '#', onclick: ev => { ev.preventDefault(); connTest(); }, text: 'Test my connection' })), ui.test ? h('p', { class: 'note', style: 'font-size:12px;word-break:break-word', text: ui.test }) : null)));
 }
 
 function cardsScreen() {
