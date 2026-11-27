@@ -2901,6 +2901,7 @@ function qrImg(text) {
    iceServers list and paste the entries between the brackets below, e.g.
    { urls: 'turn:global.relay.metered.ca:80', username: '...', credential: '...' },
    { urls: 'turns:global.relay.metered.ca:443?transport=tcp', username: '...', credential: '...' } */
+const BUILD = '27 Nov 18:30';
 const EXTRA_TURN = [
   { urls: 'stun:stun.relay.metered.ca:80' },
   { urls: 'turn:global.relay.metered.ca:80', username: '3cbb62a53aabc5089ff27a05', credential: '5O6QjK+NPVPmtSAJ' },
@@ -2929,10 +2930,24 @@ function closePeer() {
   specs = []; dc = null; peer = null;
   setTimeout(() => { try { if (d) d.close(); } catch (e) {} sp.forEach(c => { try { c.close(); } catch (e) {} }); try { if (p) p.destroy(); } catch (e) {} }, 250);
 }
+/* what the connection managed to find, so a failure can be explained (shown under the error message) */
+let iceDiag = null;
+function diagHook(pc) {
+  if (!pc || pc.__lhscDiag) return; pc.__lhscDiag = true;
+  const d = iceDiag = { found: {}, errs: [], st: '' };
+  pc.addEventListener('icecandidate', e => { if (e.candidate) { const m = /typ (\w+)/.exec(e.candidate.candidate || ''); const t = e.candidate.type || (m && m[1]) || '?'; d.found[t] = 1; } });
+  pc.addEventListener('icecandidateerror', e => { const u = String(e.url || '').replace(/^[a-z]+:/, '').split('?')[0]; if (d.errs.length < 4) d.errs.push(e.errorCode + (u ? ' ' + u : '')); });
+  pc.addEventListener('iceconnectionstatechange', () => { d.st = pc.iceConnectionState; });
+}
+function diagText() {
+  const d = iceDiag; if (!d) return 'Version ' + BUILD;
+  const f = Object.keys(d.found).join(', ') || 'nothing';
+  return 'Details: found ' + f + (d.errs.length ? ' · relay errors ' + d.errs.join('; ') : '') + (d.st ? ' · link ' + d.st : '') + ' · Version ' + BUILD;
+}
 function lost() {
   if (!G && !ui.net) return;
   if (ui.net && !dc) return;
-  if (!G) { toLobby('Could not connect to the other device. Phone networks and some Wi-Fi block direct links: try switching between Wi-Fi and mobile data, then try again.'); return; }
+  if (!G) { const why = diagText(); toLobby('Could not connect to the other device. Phone networks and some Wi-Fi block direct links: try switching between Wi-Fi and mobile data, then try again. (' + why + ')'); return; }
   toLobby(ui.watch ? 'The link to the game dropped.' : 'The link to your opponent dropped. Start a new game to reconnect.');
 }
 /* a drop in the middle of a game is not the end: keep the table, and keep trying to rejoin for 90 seconds */
@@ -3028,7 +3043,7 @@ function wireChannel(conn) {
   /* PeerJS never closes a link that just goes quiet, so watch the connection itself */
   let dropTimer = 0;
   const watch = () => {
-    const pc = conn.peerConnection; if (!pc || pc.__lhscWatch) return; pc.__lhscWatch = true;
+    const pc = conn.peerConnection; if (!pc || pc.__lhscWatch) return; pc.__lhscWatch = true; diagHook(pc);
     pc.addEventListener('iceconnectionstatechange', () => {
       const st = pc.iceConnectionState; clearTimeout(dropTimer);
       if (st === 'failed' || st === 'closed') { if (dc === conn) linkDown(conn); }
@@ -3194,7 +3209,7 @@ addEventListener('hashchange', hashJoin);
 
 /* ---------- spectators ---------- */
 function watchIce(conn, dead) {
-  const pc = conn.peerConnection; if (!pc || pc.__lhscWatch) return; pc.__lhscWatch = true;
+  const pc = conn.peerConnection; if (!pc || pc.__lhscWatch) return; pc.__lhscWatch = true; diagHook(pc);
   let t = 0;
   pc.addEventListener('iceconnectionstatechange', () => {
     const st = pc.iceConnectionState; clearTimeout(t);
@@ -4335,7 +4350,7 @@ function lobby() {
         h('div', { class: 'or', text: 'or join a friend with a code' }),
         h('div', { class: 'joinrow' }, codeIn, h('button', { class: 'btn ghost', type: 'button', onclick: () => guestJoin(false), text: 'Join' }), h('button', { class: 'btn ghost', type: 'button', onclick: () => guestJoin(true), text: 'Watch' })),
         h('p', { class: 'note', text: 'Join to play, or Watch to follow a game as a spectator. The host’s game options apply.' }),
-        h('p', { class: 'err', role: 'status', 'aria-live': 'polite', text: ui.err }))));
+        h('p', { class: 'err', role: 'status', 'aria-live': 'polite', text: ui.err }), h('p', { class: 'note', style: 'opacity:.55;font-size:11px', text: 'Version ' + BUILD }))));
 }
 
 function cardsScreen() {
